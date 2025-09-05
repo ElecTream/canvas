@@ -45,3 +45,4 @@ app.*.map.json
 /android/app/release
 build.ps1
 /build/app/outputs/apk/debug/output-metadata.json
+patch_notes.md
