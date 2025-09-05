@@ -43,3 +43,6 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+build.ps1
+/build/app/outputs/apk/debug/output-metadata.json
+build/app/outputs/apk/debug/output-metadata.json
