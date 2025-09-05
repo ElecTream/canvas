@@ -28,8 +28,10 @@ class MyApp extends StatelessWidget {
       title: 'Canvas',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
-        brightness: Brightness.dark,
-        primaryColor: Colors.blueGrey[900],
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: Colors.deepPurple,
+          brightness: Brightness.dark,
+        ),
         scaffoldBackgroundColor: const Color(0xFF1A1A1A),
         appBarTheme: AppBarTheme(
           backgroundColor: Colors.blueGrey[900],
@@ -40,9 +42,7 @@ class MyApp extends StatelessWidget {
           bodyColor: Colors.white,
           displayColor: Colors.white,
         ),
-        floatingActionButtonTheme: const FloatingActionButtonThemeData(
-          backgroundColor: Colors.deepPurpleAccent,
-        ),
+        useMaterial3: true,
       ),
       home: const HomeScreen(),
     );

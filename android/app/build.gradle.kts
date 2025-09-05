@@ -1,3 +1,7 @@
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
+
 plugins {
     id("com.android.application")
     id("kotlin-android")
@@ -14,9 +18,15 @@ android {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
     }
-
+	
     kotlinOptions {
         jvmTarget = JavaVersion.VERSION_11.toString()
+    }
+
+	applicationVariants.all {
+		outputs.all {
+			(this as com.android.build.gradle.internal.api.BaseVariantOutputImpl).outputFileName = "Canvas-${versionName}.apk"
+		}
     }
 
     defaultConfig {
