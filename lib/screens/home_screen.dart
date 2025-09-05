@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:intl/intl.dart'; // Import the intl package
 import '../models/note.dart';
 import '../providers/notes_provider.dart';
 import 'note_editor_screen.dart';
@@ -34,8 +35,15 @@ class HomeScreen extends ConsumerWidget {
                   child: ListTile(
                     title: Text(note.title, style: const TextStyle(fontWeight: FontWeight.bold)),
                     subtitle: Text(
-                      note.content.replaceAll('\n', ' ').substring(0, (note.content.length > 100) ? 100 : note.content.length) + '...',
+                      note.content.replaceAll('\n', ' '),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                       style: TextStyle(color: Colors.grey[400]),
+                    ),
+                    // Add a trailing widget to display the formatted date
+                    trailing: Text(
+                      DateFormat('MMM d').format(note.updatedAt),
+                      style: TextStyle(color: Colors.grey[500], fontSize: 12),
                     ),
                     onTap: () {
                       Navigator.push(
