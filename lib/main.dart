@@ -1,16 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:hive_flutter/hive_flutter.dart';
-import 'models/note.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'firebase_options.dart';
+import 'providers/auth_provider.dart';
 import 'screens/home_screen.dart';
+import 'screens/splash_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  await Hive.initFlutter();
-  Hive.registerAdapter(NoteAdapter());
-  await Hive.openBox<Note>('notes');
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
 
   runApp(
     const ProviderScope(
@@ -19,11 +21,14 @@ void main() async {
   );
 }
 
-class MyApp extends StatelessWidget {
+class MyApp extends ConsumerWidget {
   const MyApp({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    // Watch the initializationProvider
+    final initialize = ref.watch(initializationProvider);
+
     return MaterialApp(
       title: 'Canvas',
       debugShowCheckedModeBanner: false,
@@ -44,7 +49,18 @@ class MyApp extends StatelessWidget {
         ),
         useMaterial3: true,
       ),
-      home: const HomeScreen(),
+      // Use .when to show the correct screen
+      home: initialize.when(
+        data: (user) {
+          // If we have a user, show the home screen
+          return const HomeScreen();
+        },
+        // Show splash screen on loading or error
+        loading: () => const SplashScreen(),
+        error: (e, stackTrace) => const Scaffold(
+          body: Center(child: Text('Error initializing app')),
+        ),
+      ),
     );
   }
 }

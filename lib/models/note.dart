@@ -1,32 +1,40 @@
-import 'package:hive/hive.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:uuid/uuid.dart';
 
-part 'note.g.dart';
-
-@HiveType(typeId: 1)
-class Note extends HiveObject {
-  @HiveField(0)
-  late String id;
-
-  @HiveField(1)
+class Note {
+  String id;
   String title;
-
-  @HiveField(2)
   String content;
-
-  @HiveField(3)
-  DateTime createdAt;
-
-  @HiveField(4)
-  DateTime updatedAt;
+  Timestamp createdAt;
+  Timestamp updatedAt;
 
   Note({
     required this.title,
     required this.content,
     String? id,
-    DateTime? createdAt,
-    DateTime? updatedAt,
+    Timestamp? createdAt,
+    Timestamp? updatedAt,
   })  : id = id ?? const Uuid().v4(),
-        createdAt = createdAt ?? DateTime.now(),
-        updatedAt = updatedAt ?? DateTime.now();
+        createdAt = createdAt ?? Timestamp.now(),
+        updatedAt = updatedAt ?? Timestamp.now();
+
+  factory Note.fromJson(Map<String, dynamic> json) {
+    return Note(
+      id: json['id'] as String,
+      title: json['title'] as String,
+      content: json['content'] as String,
+      createdAt: json['createdAt'] as Timestamp,
+      updatedAt: json['updatedAt'] as Timestamp,
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'title': title,
+      'content': content,
+      'createdAt': createdAt,
+      'updatedAt': updatedAt,
+    };
+  }
 }

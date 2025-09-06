@@ -34,10 +34,11 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
   void _saveNote() {
     final title = _titleController.text;
     final content = _contentController.text;
+    final noteService = ref.read(noteServiceProvider);
 
     if (title.isEmpty && content.isEmpty) {
       if (_isEditing) {
-        ref.read(notesProvider.notifier).deleteNote(widget.note!.id);
+        noteService.deleteNote(widget.note!.id);
       }
       Navigator.pop(context);
       return;
@@ -47,10 +48,11 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
       id: widget.note?.id,
       title: title.isEmpty ? "Untitled Note" : title,
       content: content,
+      // Pass the original createdAt timestamp if editing
       createdAt: widget.note?.createdAt,
     );
 
-    ref.read(notesProvider.notifier).addOrUpdateNote(noteToSave);
+    noteService.saveNote(noteToSave);
     Navigator.pop(context);
   }
   
@@ -68,7 +70,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
             ),
             TextButton(
               onPressed: () {
-                ref.read(notesProvider.notifier).deleteNote(widget.note!.id);
+                ref.read(noteServiceProvider).deleteNote(widget.note!.id);
                 Navigator.pop(context); // Close dialog
                 Navigator.pop(context); // Close editor
               },

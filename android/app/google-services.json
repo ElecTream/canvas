@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "1085708993796",
+    "project_id": "canvas-elec",
+    "storage_bucket": "canvas-elec.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1085708993796:android:68827c8bcd394ae8eafc51",
+        "android_client_info": {
+          "package_name": "com.electream.canvas"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBRofN9xSGc-YEzQVqk6MJ1qQlNr5oySNA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
