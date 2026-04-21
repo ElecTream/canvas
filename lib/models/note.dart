@@ -5,6 +5,8 @@ class Note {
   final String id;
   final String title;
   final String content;
+  final List<String> tags;
+  final bool isPinned;
   final Timestamp createdAt;
   final Timestamp updatedAt;
 
@@ -12,15 +14,21 @@ class Note {
     required this.title,
     required this.content,
     String? id,
+    List<String>? tags,
+    bool? isPinned,
     Timestamp? createdAt,
     Timestamp? updatedAt,
   })  : id = id ?? const Uuid().v4(),
+        tags = tags ?? const [],
+        isPinned = isPinned ?? false,
         createdAt = createdAt ?? Timestamp.now(),
         updatedAt = updatedAt ?? Timestamp.now();
 
   Note copyWith({
     String? title,
     String? content,
+    List<String>? tags,
+    bool? isPinned,
     Timestamp? createdAt,
     Timestamp? updatedAt,
   }) {
@@ -28,6 +36,8 @@ class Note {
       id: id,
       title: title ?? this.title,
       content: content ?? this.content,
+      tags: tags ?? this.tags,
+      isPinned: isPinned ?? this.isPinned,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
     );
@@ -37,6 +47,8 @@ class Note {
     final rawId = json['id'];
     final rawTitle = json['title'];
     final rawContent = json['content'];
+    final rawTags = json['tags'];
+    final rawIsPinned = json['isPinned'];
     final rawCreatedAt = json['createdAt'];
     final rawUpdatedAt = json['updatedAt'];
 
@@ -44,6 +56,8 @@ class Note {
       id: rawId is String && rawId.isNotEmpty ? rawId : const Uuid().v4(),
       title: rawTitle is String ? rawTitle : '',
       content: rawContent is String ? rawContent : '',
+      tags: rawTags is List ? rawTags.whereType<String>().toList() : const [],
+      isPinned: rawIsPinned is bool ? rawIsPinned : false,
       createdAt: rawCreatedAt is Timestamp ? rawCreatedAt : Timestamp.now(),
       updatedAt: rawUpdatedAt is Timestamp ? rawUpdatedAt : Timestamp.now(),
     );
@@ -54,6 +68,8 @@ class Note {
       'id': id,
       'title': title,
       'content': content,
+      'tags': tags,
+      'isPinned': isPinned,
       'createdAt': createdAt,
       'updatedAt': updatedAt,
     };

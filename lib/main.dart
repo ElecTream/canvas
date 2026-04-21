@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
 import 'providers/auth_provider.dart';
 import 'screens/home_screen.dart';
 import 'screens/splash_screen.dart';
+import 'theme/app_theme.dart';
+import 'theme/glass_background.dart';
+import 'widgets/glass_card.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -31,44 +33,10 @@ class MyApp extends ConsumerWidget {
     return MaterialApp(
       title: 'Canvas',
       debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: Colors.deepPurple,
-          brightness: Brightness.dark,
-        ),
-        useMaterial3: true,
-        scaffoldBackgroundColor: const Color(0xFF1A1A1A),
-        appBarTheme: AppBarTheme(
-          backgroundColor: const Color(0xFF1A1A1A),
-          foregroundColor: Colors.white,
-          elevation: 0,
-          scrolledUnderElevation: 0,
-          titleTextStyle: GoogleFonts.lato(
-            fontSize: 20,
-            fontWeight: FontWeight.bold,
-            color: Colors.white,
-          ),
-        ),
-        cardTheme: CardThemeData(
-          color: const Color(0xFF242424),
-          elevation: 0,
-          margin: const EdgeInsets.symmetric(vertical: 6),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
-        ),
-        textTheme: GoogleFonts.latoTextTheme(Theme.of(context).textTheme).apply(
-          bodyColor: Colors.white,
-          displayColor: Colors.white,
-        ),
-        snackBarTheme: const SnackBarThemeData(
-          behavior: SnackBarBehavior.floating,
-        ),
-      ),
+      theme: AppTheme.build(),
+      builder: (context, child) => GlassBackground(child: child ?? const SizedBox.shrink()),
       home: initialize.when(
         data: (user) {
-          // If the future resolved but we have no user, sign-in silently
-          // failed at some earlier point — surface the same error UI.
           if (user == null) {
             return const _AuthErrorScreen(
               error: 'Sign-in returned no user.',
@@ -90,34 +58,52 @@ class _AuthErrorScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final teal = Theme.of(context).colorScheme.secondary;
     return Scaffold(
+      backgroundColor: Colors.transparent,
       body: Center(
         child: Padding(
           padding: const EdgeInsets.all(24),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Icon(Icons.cloud_off, size: 48),
-              const SizedBox(height: 16),
-              const Text(
-                'Sign-in failed. Check connection and try again.',
-                textAlign: TextAlign.center,
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 360),
+            child: GlassCard(
+              padding: const EdgeInsets.all(28),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(Icons.cloud_off, size: 44, color: teal),
+                  const SizedBox(height: 16),
+                  const Text(
+                    'Sign-in failed',
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+                  ),
+                  const SizedBox(height: 8),
+                  const Text(
+                    'Check your connection and try again.',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(color: Colors.white70),
+                  ),
+                  if (error != null) ...[
+                    const SizedBox(height: 8),
+                    Text(
+                      error!,
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(fontSize: 11, color: Colors.white38),
+                    ),
+                  ],
+                  const SizedBox(height: 24),
+                  FilledButton.icon(
+                    style: FilledButton.styleFrom(
+                      backgroundColor: teal.withValues(alpha: 0.9),
+                      foregroundColor: Colors.black,
+                    ),
+                    onPressed: () => ref.invalidate(initializationProvider),
+                    icon: const Icon(Icons.refresh),
+                    label: const Text('Retry'),
+                  ),
+                ],
               ),
-              if (error != null) ...[
-                const SizedBox(height: 8),
-                Text(
-                  error!,
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(fontSize: 12, color: Colors.white54),
-                ),
-              ],
-              const SizedBox(height: 24),
-              ElevatedButton.icon(
-                onPressed: () => ref.invalidate(initializationProvider),
-                icon: const Icon(Icons.refresh),
-                label: const Text('Retry'),
-              ),
-            ],
+            ),
           ),
         ),
       ),

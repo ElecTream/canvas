@@ -41,6 +41,8 @@ class NoteService {
       'id': note.id,
       'title': note.title,
       'content': note.content,
+      'tags': note.tags,
+      'isPinned': note.isPinned,
       'createdAt': isNew ? FieldValue.serverTimestamp() : note.createdAt,
       'updatedAt': FieldValue.serverTimestamp(),
     };
