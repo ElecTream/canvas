@@ -15,7 +15,7 @@ class NoteService {
     return user.uid;
   }
 
-  // Get a reference to the user's notes collection
+  // Typed collection reference used for reads.
   CollectionReference<Note> get _notesCollection =>
       _firestore.collection('users').doc(_userId).collection('notes').withConverter<Note>(
             fromFirestore: (snapshot, _) => Note.fromJson(snapshot.data()!),
@@ -30,10 +30,26 @@ class NoteService {
         .map((snapshot) => snapshot.docs.map((doc) => doc.data()).toList());
   }
 
-  // Add or update a note
-  Future<void> saveNote(Note note) {
-    note.updatedAt = Timestamp.now();
-    return _notesCollection.doc(note.id).set(note);
+  /// Add or update a note.
+  ///
+  /// Does not mutate [note]. `updatedAt` is always written as a server
+  /// timestamp for reliable ordering across clients. Set [isNew] to true
+  /// when creating a brand-new note so `createdAt` also uses the server
+  /// timestamp; otherwise the existing `note.createdAt` is preserved.
+  Future<void> saveNote(Note note, {bool isNew = false}) {
+    final data = <String, dynamic>{
+      'id': note.id,
+      'title': note.title,
+      'content': note.content,
+      'createdAt': isNew ? FieldValue.serverTimestamp() : note.createdAt,
+      'updatedAt': FieldValue.serverTimestamp(),
+    };
+    return _firestore
+        .collection('users')
+        .doc(_userId)
+        .collection('notes')
+        .doc(note.id)
+        .set(data);
   }
 
   // Delete a note

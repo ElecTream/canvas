@@ -1,20 +1,20 @@
-name: Canvas
+name: canvas
 description: A simple, polished notes app.
-publish_to: 'none' 
+publish_to: 'none'
 version: 0.5.1
 
 environment:
-  sdk: '>=3.2.3 <4.0.0'
+  sdk: '>=3.5.0 <4.0.0'
 
 dependencies:
   flutter:
     sdk: flutter
-  
+
   # Core Functionality
   flutter_riverpod: ^2.5.1
   uuid: ^4.4.0
   package_info_plus: ^8.0.0
-  
+
   # Firebase Packages for Syncing
   firebase_core: ^3.1.1
   firebase_auth: ^5.1.1
@@ -22,18 +22,17 @@ dependencies:
 
   # UI & Style
   google_fonts: ^6.2.1
-  flutter_markdown: ^0.7.1
   intl: ^0.19.0
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
-  
-  flutter_lints: ^2.0.0
+
+  flutter_lints: ^5.0.0
 
   # Code Generation & Tools
   build_runner: ^2.4.9
-  
+
   # App Icon & Splash Screen
   flutter_launcher_icons: ^0.13.1
   flutter_native_splash: ^2.4.0

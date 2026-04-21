@@ -15,17 +15,37 @@ class NoteEditorScreen extends ConsumerStatefulWidget {
 class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
   late final TextEditingController _titleController;
   late final TextEditingController _contentController;
+  late final String _initialTitle;
+  late final String _initialContent;
+  bool _isDirty = false;
+
   bool get _isEditing => widget.note != null;
 
   @override
   void initState() {
     super.initState();
-    _titleController = TextEditingController(text: widget.note?.title ?? '');
-    _contentController = TextEditingController(text: widget.note?.content ?? '');
+    _initialTitle = widget.note?.title ?? '';
+    _initialContent = widget.note?.content ?? '';
+    _titleController = TextEditingController(text: _initialTitle);
+    _contentController = TextEditingController(text: _initialContent);
+    _titleController.addListener(_onTextChanged);
+    _contentController.addListener(_onTextChanged);
+  }
+
+  void _onTextChanged() {
+    final dirty = _titleController.text != _initialTitle ||
+        _contentController.text != _initialContent;
+    if (dirty != _isDirty) {
+      setState(() {
+        _isDirty = dirty;
+      });
+    }
   }
 
   @override
   void dispose() {
+    _titleController.removeListener(_onTextChanged);
+    _contentController.removeListener(_onTextChanged);
     _titleController.dispose();
     _contentController.dispose();
     super.dispose();
@@ -37,9 +57,8 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
     final noteService = ref.read(noteServiceProvider);
 
     if (title.isEmpty && content.isEmpty) {
-      if (_isEditing) {
-        noteService.deleteNote(widget.note!.id);
-      }
+      // Don't silently delete — just pop without saving.
+      _isDirty = false;
       Navigator.pop(context);
       return;
     }
@@ -52,10 +71,11 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
       createdAt: widget.note?.createdAt,
     );
 
-    noteService.saveNote(noteToSave);
+    noteService.saveNote(noteToSave, isNew: !_isEditing);
+    _isDirty = false;
     Navigator.pop(context);
   }
-  
+
   void _deleteNote() {
     if (_isEditing) {
       showDialog(
@@ -70,8 +90,25 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
             ),
             TextButton(
               onPressed: () {
-                ref.read(noteServiceProvider).deleteNote(widget.note!.id);
+                final noteService = ref.read(noteServiceProvider);
+                final deletedNote = widget.note!;
+                noteService.deleteNote(deletedNote.id);
                 Navigator.pop(context); // Close dialog
+
+                // Show snackbar on the root ScaffoldMessenger so it survives the pop.
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: const Text('Note deleted'),
+                    action: SnackBarAction(
+                      label: 'Undo',
+                      onPressed: () {
+                        noteService.saveNote(deletedNote, isNew: false);
+                      },
+                    ),
+                  ),
+                );
+
+                _isDirty = false;
                 Navigator.pop(context); // Close editor
               },
               child: const Text('Delete', style: TextStyle(color: Colors.red)),
@@ -82,48 +119,94 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
     }
   }
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        leading: IconButton(
-          icon: const Icon(Icons.check),
-          onPressed: _saveNote,
-        ),
-        title: Text(_isEditing ? 'Edit Note' : 'New Note'),
+  Future<bool> _confirmDiscard() async {
+    final result = await showDialog<String>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Discard changes?'),
+        content: const Text('You have unsaved changes.'),
         actions: [
-          if (_isEditing)
-            IconButton(
-              icon: const Icon(Icons.delete_outline),
-              onPressed: _deleteNote,
-            ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, 'cancel'),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, 'discard'),
+            child: const Text('Discard', style: TextStyle(color: Colors.red)),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, 'save'),
+            child: const Text('Save'),
+          ),
         ],
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          children: [
-            TextField(
-              controller: _titleController,
-              decoration: const InputDecoration.collapsed(
-                hintText: 'Title',
-              ),
-              style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-              maxLines: null,
+    );
+
+    if (!mounted) return false;
+
+    switch (result) {
+      case 'save':
+        _saveNote();
+        return false; // _saveNote handles the pop
+      case 'discard':
+        _isDirty = false;
+        Navigator.pop(context);
+        return false;
+      default:
+        return false; // Cancel — stay.
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return PopScope(
+      canPop: !_isDirty,
+      onPopInvokedWithResult: (didPop, result) async {
+        if (didPop) return;
+        await _confirmDiscard();
+      },
+      child: Scaffold(
+        appBar: AppBar(
+          leading: const BackButton(),
+          title: Text(_isEditing ? 'Edit Note' : 'New Note'),
+          actions: [
+            IconButton(
+              icon: const Icon(Icons.check),
+              onPressed: _saveNote,
             ),
-            const SizedBox(height: 16),
-            Expanded(
-              child: TextField(
-                controller: _contentController,
+            if (_isEditing)
+              IconButton(
+                icon: const Icon(Icons.delete_outline),
+                onPressed: _deleteNote,
+              ),
+          ],
+        ),
+        body: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            children: [
+              TextField(
+                controller: _titleController,
                 decoration: const InputDecoration.collapsed(
-                  hintText: 'Start writing...',
+                  hintText: 'Title',
                 ),
-                style: const TextStyle(fontSize: 18),
+                style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
                 maxLines: null,
                 autofocus: !_isEditing,
               ),
-            ),
-          ],
+              const SizedBox(height: 16),
+              Expanded(
+                child: TextField(
+                  controller: _contentController,
+                  decoration: const InputDecoration.collapsed(
+                    hintText: 'Start writing...',
+                  ),
+                  style: const TextStyle(fontSize: 18),
+                  maxLines: null,
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

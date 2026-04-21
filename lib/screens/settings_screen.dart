@@ -1,10 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:package_info_plus/package_info_plus.dart';
-
-final packageInfoProvider = FutureProvider<PackageInfo>((ref) {
-  return PackageInfo.fromPlatform();
-});
+import '../providers/package_info_provider.dart';
 
 class SettingsScreen extends ConsumerWidget {
   const SettingsScreen({super.key});
@@ -21,7 +17,6 @@ class SettingsScreen extends ConsumerWidget {
         padding: const EdgeInsets.all(8.0),
         children: [
           Card(
-            color: Colors.blueGrey[800],
             child: ListTile(
               leading: const Icon(Icons.info_outline),
               title: const Text('About'),
