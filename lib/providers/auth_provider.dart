@@ -1,6 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../services/auth_service.dart';
+import 'image_provider.dart';
 
 // Provides the AuthService instance
 final authServiceProvider = Provider<AuthService>((ref) => AuthService());
@@ -10,10 +11,9 @@ final authServiceProvider = Provider<AuthService>((ref) => AuthService());
 // instead of being swallowed into a null data value.
 final initializationProvider = FutureProvider<User?>((ref) async {
   final authService = ref.read(authServiceProvider);
-  if (authService.currentUser == null) {
-    return await authService.signInAnonymously();
-  }
-  return authService.currentUser;
+  final user = authService.currentUser ?? await authService.signInAnonymously();
+  await ref.read(imageServiceProvider).warmup();
+  return user;
 });
 
 // Retry helper: UI calls this to re-run the initialization flow.

@@ -1,23 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'palettes.dart';
 
 class AppTheme {
   AppTheme._();
 
-  static const Color midnight = Color(0xFF1E3A8A);
-  static const Color teal = Color(0xFF2DD4BF);
-  static const Color surfaceDeep = Color(0xFF0B1020);
-  static const Color surfaceBlob1 = Color(0xFF1E40AF);
-  static const Color surfaceBlob2 = Color(0xFF0D9488);
-
-  static ThemeData build() {
+  static ThemeData build(PaletteColors colors) {
     final colorScheme = ColorScheme.fromSeed(
-      seedColor: midnight,
+      seedColor: colors.seed,
       brightness: Brightness.dark,
-      surface: surfaceDeep,
+      surface: colors.surface,
     ).copyWith(
-      secondary: teal,
-      tertiary: teal,
+      secondary: colors.accent,
+      tertiary: colors.accent,
     );
 
     final baseText = GoogleFonts.latoTextTheme(
@@ -26,6 +21,8 @@ class AppTheme {
       bodyColor: Colors.white,
       displayColor: Colors.white,
     );
+
+    final overlay = _mix(colors.surface, Colors.white, 0.06);
 
     return ThemeData(
       useMaterial3: true,
@@ -56,7 +53,7 @@ class AppTheme {
         ),
       ),
       dialogTheme: DialogThemeData(
-        backgroundColor: const Color(0xFF121829).withValues(alpha: 0.9),
+        backgroundColor: overlay.withValues(alpha: 0.92),
         surfaceTintColor: Colors.transparent,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(20),
@@ -69,14 +66,14 @@ class AppTheme {
       ),
       snackBarTheme: SnackBarThemeData(
         behavior: SnackBarBehavior.floating,
-        backgroundColor: const Color(0xFF121829).withValues(alpha: 0.95),
+        backgroundColor: overlay.withValues(alpha: 0.95),
         contentTextStyle: GoogleFonts.lato(color: Colors.white),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(12),
         ),
       ),
       popupMenuTheme: PopupMenuThemeData(
-        color: const Color(0xFF121829).withValues(alpha: 0.98),
+        color: overlay.withValues(alpha: 0.98),
         surfaceTintColor: Colors.transparent,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(12),
@@ -111,6 +108,10 @@ class AppTheme {
       ),
     );
   }
+}
+
+Color _mix(Color a, Color b, double t) {
+  return Color.lerp(a, b, t)!;
 }
 
 class _FadeScalePageTransitions extends PageTransitionsBuilder {

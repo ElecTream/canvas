@@ -3,9 +3,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 import 'package:intl/intl.dart';
+import 'package:markdown_widget/markdown_widget.dart';
 import '../models/note.dart';
+import '../providers/image_provider.dart';
 import '../providers/notes_provider.dart';
+import '../providers/orphan_cleanup_provider.dart';
 import '../providers/tags_provider.dart';
+import '../services/image_service.dart';
+import '../utils/page_routes.dart';
 import '../widgets/glass_app_bar.dart';
 import '../widgets/glass_card.dart';
 import '../widgets/glass_fab.dart';
@@ -85,7 +90,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   void _openEditor([Note? note]) {
     Navigator.push(
       context,
-      MaterialPageRoute(builder: (_) => NoteEditorScreen(note: note)),
+      glassOverlayRoute<void>((_) => NoteEditorScreen(note: note)),
     );
   }
 
@@ -121,6 +126,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   Widget build(BuildContext context) {
     final notesAsync = ref.watch(notesStreamProvider);
     final allTags = ref.watch(tagsProvider);
+    ref.watch(orphanCleanupProvider);
 
     return Scaffold(
       backgroundColor: Colors.transparent,
@@ -230,7 +236,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           tooltip: 'Settings',
           onPressed: () => Navigator.push(
             context,
-            MaterialPageRoute(builder: (_) => const SettingsScreen()),
+            fadeScaleRoute((_) => const SettingsScreen()),
           ),
         ),
       ],
@@ -398,16 +404,13 @@ class _NoteCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final preview = note.content.replaceAll(RegExp(r'\s+'), ' ').trim();
+    final raw = note.content.trim();
     final secondary = Colors.white.withValues(alpha: 0.6);
     final teal = Theme.of(context).colorScheme.secondary;
+    final hasInlineImages = note.blocks.any((b) => b is ImageBlock);
 
     return Hero(
       tag: 'note-${note.id}',
-      flightShuttleBuilder: (_, __, ___, ____, _____) => Material(
-        color: Colors.transparent,
-        child: _NoteCard(note: note, onTap: onTap, onLongPress: onLongPress),
-      ),
       child: GlassCard(
         onTap: onTap,
         onLongPress: onLongPress,
@@ -438,17 +441,20 @@ class _NoteCard extends StatelessWidget {
                   ),
               ],
             ),
-            if (preview.isNotEmpty) ...[
+            if (hasInlineImages) ...[
               const SizedBox(height: 8),
-              Text(
-                preview,
-                style: TextStyle(
-                  color: Colors.white.withValues(alpha: 0.75),
-                  fontSize: 12.5,
-                  height: 1.4,
+              IgnorePointer(
+                child: _BlockPreview(blocks: note.blocks, accent: teal),
+              ),
+            ] else if (raw.isNotEmpty) ...[
+              const SizedBox(height: 8),
+              ConstrainedBox(
+                constraints: const BoxConstraints(maxHeight: 120),
+                child: ClipRect(
+                  child: IgnorePointer(
+                    child: _CardMarkdown(data: raw, accent: teal),
+                  ),
                 ),
-                maxLines: 5,
-                overflow: TextOverflow.ellipsis,
               ),
             ],
             if (note.tags.isNotEmpty) ...[
@@ -480,6 +486,54 @@ class _NoteCard extends StatelessWidget {
               style: TextStyle(color: secondary, fontSize: 10),
             ),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+class _BlockPreview extends StatelessWidget {
+  const _BlockPreview({required this.blocks, required this.accent});
+  final List<NoteBlock> blocks;
+  final Color accent;
+
+  @override
+  Widget build(BuildContext context) {
+    final children = <Widget>[];
+    double estimated = 0;
+    const budget = 220.0;
+
+    for (final b in blocks) {
+      if (estimated >= budget) break;
+      if (b is TextBlock) {
+        final text = b.text.trim();
+        if (text.isEmpty) continue;
+        children.add(_CardMarkdown(data: text, accent: accent));
+        estimated += 70;
+      } else if (b is ImageBlock) {
+        children.add(
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 6),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(8),
+              child: AspectRatio(
+                aspectRatio: 16 / 9,
+                child: _HeroThumb(name: b.name),
+              ),
+            ),
+          ),
+        );
+        estimated += 120;
+      }
+    }
+
+    return ConstrainedBox(
+      constraints: const BoxConstraints(maxHeight: budget),
+      child: ClipRect(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          mainAxisSize: MainAxisSize.min,
+          children: children,
         ),
       ),
     );
@@ -567,6 +621,114 @@ class _NoteActionsSheet extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+}
+
+class _CardMarkdown extends StatelessWidget {
+  const _CardMarkdown({required this.data, required this.accent});
+  final String data;
+  final Color accent;
+
+  @override
+  Widget build(BuildContext context) {
+    final body = Colors.white.withValues(alpha: 0.8);
+    final config = MarkdownConfig.darkConfig.copy(
+      configs: [
+        PConfig(textStyle: TextStyle(fontSize: 12.5, height: 1.4, color: body)),
+        H1Config(
+          style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: Colors.white, height: 1.25),
+        ),
+        H2Config(
+          style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: Colors.white, height: 1.25),
+        ),
+        H3Config(
+          style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Colors.white, height: 1.25),
+        ),
+        H4Config(
+          style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w600, color: Colors.white),
+        ),
+        H5Config(
+          style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w600, color: Colors.white),
+        ),
+        H6Config(
+          style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w600, color: Colors.white),
+        ),
+        LinkConfig(style: TextStyle(color: accent, decoration: TextDecoration.underline, fontSize: 12.5)),
+        CodeConfig(
+          style: TextStyle(
+            backgroundColor: Colors.white.withValues(alpha: 0.08),
+            color: accent,
+            fontFamily: 'monospace',
+            fontSize: 12,
+          ),
+        ),
+        PreConfig.darkConfig.copy(
+          textStyle: TextStyle(color: body, fontSize: 11.5, fontFamily: 'monospace', height: 1.35),
+          decoration: BoxDecoration(
+            color: Colors.black.withValues(alpha: 0.28),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          padding: const EdgeInsets.all(8),
+        ),
+        BlockquoteConfig(sideColor: accent, textColor: body),
+      ],
+    );
+
+    return MarkdownBlock(
+      data: data,
+      selectable: false,
+      config: config,
+      generator: MarkdownGenerator(
+        linesMargin: const EdgeInsets.symmetric(vertical: 3),
+      ),
+    );
+  }
+}
+
+class _HeroThumb extends ConsumerStatefulWidget {
+  const _HeroThumb({required this.name});
+  final String name;
+
+  @override
+  ConsumerState<_HeroThumb> createState() => _HeroThumbState();
+}
+
+class _HeroThumbState extends ConsumerState<_HeroThumb> {
+  bool _precached = false;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_precached) return;
+    final service = ref.read(imageServiceProvider);
+    final f = service.resolveSync(widget.name);
+    if (f.existsSync()) {
+      precacheImage(FileImage(f), context).ignore();
+    }
+    _precached = true;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final ImageService service = ref.watch(imageServiceProvider);
+    final f = service.resolveSync(widget.name);
+    if (!f.existsSync()) {
+      return Container(
+        color: Colors.white.withValues(alpha: 0.04),
+        alignment: Alignment.center,
+        child: Icon(
+          Icons.broken_image_outlined,
+          color: Colors.white.withValues(alpha: 0.3),
+          size: 32,
+        ),
+      );
+    }
+    return Image.file(
+      f,
+      fit: BoxFit.cover,
+      cacheWidth: 600,
+      gaplessPlayback: true,
     );
   }
 }

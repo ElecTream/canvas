@@ -1,44 +1,39 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
-import 'app_theme.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../providers/palette_provider.dart';
+import 'palettes.dart';
 
-class GlassBackground extends StatelessWidget {
+class GlassBackground extends ConsumerWidget {
   const GlassBackground({super.key, required this.child});
 
   final Widget child;
 
   @override
-  Widget build(BuildContext context) {
-    return Container(
-      color: AppTheme.surfaceDeep,
+  Widget build(BuildContext context, WidgetRef ref) {
+    final palette = ref.watch(paletteProvider);
+    final colors = paletteColorsOf(palette);
+
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 350),
+      curve: Curves.easeInOut,
+      color: colors.surface,
       child: Stack(
         children: [
-          const Positioned(
+          Positioned(
             top: -120,
             left: -80,
-            child: _Blob(
-              color: AppTheme.surfaceBlob1,
-              size: 420,
-              opacity: 0.55,
-            ),
+            child: _Blob(color: colors.blob1, size: 420, opacity: 0.55),
           ),
-          const Positioned(
+          Positioned(
             bottom: -160,
             right: -120,
-            child: _Blob(
-              color: AppTheme.surfaceBlob2,
-              size: 460,
-              opacity: 0.45,
-            ),
+            child: _Blob(color: colors.blob2, size: 460, opacity: 0.45),
           ),
-          const Positioned(
+          Positioned(
             top: 240,
             right: -80,
-            child: _Blob(
-              color: AppTheme.midnight,
-              size: 320,
-              opacity: 0.35,
-            ),
+            child: _Blob(color: colors.blob3, size: 320, opacity: 0.35),
           ),
           Positioned.fill(
             child: BackdropFilter(
@@ -67,7 +62,9 @@ class _Blob extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return IgnorePointer(
-      child: Container(
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 350),
+        curve: Curves.easeInOut,
         width: size,
         height: size,
         decoration: BoxDecoration(

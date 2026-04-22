@@ -46,3 +46,4 @@ app.*.map.json
 build.ps1
 /build/app/outputs/apk/debug/output-metadata.json
 patch_notes.md
+/releases/

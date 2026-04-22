@@ -26,12 +26,6 @@ android {
         jvmTarget = JavaVersion.VERSION_11.toString()
     }
 
-	applicationVariants.all {
-		outputs.all {
-			(this as com.android.build.gradle.internal.api.BaseVariantOutputImpl).outputFileName = "Canvas-${versionName}.apk"
-		}
-    }
-
     defaultConfig {
         applicationId = "com.electream.canvas"
         // You can update the following values to match your application needs.

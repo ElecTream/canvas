@@ -3,10 +3,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
 import 'providers/auth_provider.dart';
+import 'providers/palette_provider.dart';
 import 'screens/home_screen.dart';
 import 'screens/splash_screen.dart';
 import 'theme/app_theme.dart';
 import 'theme/glass_background.dart';
+import 'theme/palettes.dart';
 import 'widgets/glass_card.dart';
 
 void main() async {
@@ -29,11 +31,12 @@ class MyApp extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final initialize = ref.watch(initializationProvider);
+    final palette = ref.watch(paletteProvider);
 
     return MaterialApp(
       title: 'Canvas',
       debugShowCheckedModeBanner: false,
-      theme: AppTheme.build(),
+      theme: AppTheme.build(paletteColorsOf(palette)),
       builder: (context, child) => GlassBackground(child: child ?? const SizedBox.shrink()),
       home: initialize.when(
         data: (user) {

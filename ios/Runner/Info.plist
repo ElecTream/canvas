@@ -47,5 +47,11 @@
 		<true/>
 		<key>UIStatusBarHidden</key>
 		<false/>
+		<key>NSCameraUsageDescription</key>
+		<string>Canvas needs the camera to attach photos to notes.</string>
+		<key>NSPhotoLibraryUsageDescription</key>
+		<string>Canvas needs your photo library to attach images to notes.</string>
+		<key>NSPhotoLibraryAddUsageDescription</key>
+		<string>Canvas saves captured photos to your library.</string>
 	</dict>
 </plist>
