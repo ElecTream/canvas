@@ -1,16 +1,18 @@
-import 'dart:typed_data';
+import 'dart:io' show File, Platform;
 
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:image_cropper/image_cropper.dart';
 import 'package:uuid/uuid.dart';
 
 import '../models/note.dart';
 import '../providers/image_provider.dart';
-import '../screens/image_editor_screen.dart';
 import '../services/image_service.dart';
-import '../utils/page_routes.dart';
+import '../utils/app_snackbar.dart';
 import 'glass_card.dart';
 import 'image_viewer.dart';
+import 'markdown_input_helpers.dart';
 
 class BlockEditor extends ConsumerStatefulWidget {
   const BlockEditor({
@@ -91,7 +93,7 @@ class BlockEditorState extends ConsumerState<BlockEditor> {
 
   _Entry _makeText(String text) {
     final id = const Uuid().v4();
-    final controller = TextEditingController(text: text);
+    final controller = MarkdownInputController(text: text);
     final focus = FocusNode();
     final entry = _Entry.text(id: id, controller: controller, focus: focus);
     controller.addListener(_notifyChanged);
@@ -243,28 +245,71 @@ class BlockEditorState extends ConsumerState<BlockEditor> {
     final service = ref.read(imageServiceProvider);
     final file = service.resolveSync(entry.name!);
     if (!await file.exists()) return;
+
+    // image_cropper ships native Android/iOS UI only; desktop/web fall back
+    // to a polite no-op snack so the feature doesn't crash off-platform.
+    if (kIsWeb || !(Platform.isAndroid || Platform.isIOS)) {
+      if (mounted) {
+        showAppSnack(context, 'Image editing only available on Android / iOS',
+            duration: const Duration(seconds: 2));
+      }
+      return;
+    }
+
+    final theme = Theme.of(context);
     try {
-      final bytes = await file.readAsBytes();
-      if (!mounted) return;
-      final edited = await Navigator.push<Uint8List?>(
-        context,
-        glassOverlayRoute<Uint8List?>(
-          (_) => ImageEditorScreen(bytes: bytes),
-        ),
+      final cropped = await ImageCropper().cropImage(
+        sourcePath: file.path,
+        compressFormat: ImageCompressFormat.jpg,
+        compressQuality: 92,
+        uiSettings: [
+          AndroidUiSettings(
+            toolbarTitle: 'Edit image',
+            toolbarColor: Colors.black,
+            toolbarWidgetColor: Colors.white,
+            statusBarColor: Colors.black,
+            backgroundColor: Colors.black,
+            activeControlsWidgetColor: theme.colorScheme.secondary,
+            initAspectRatio: CropAspectRatioPreset.original,
+            lockAspectRatio: false,
+            hideBottomControls: false,
+            aspectRatioPresets: const [
+              CropAspectRatioPreset.original,
+              CropAspectRatioPreset.square,
+              CropAspectRatioPreset.ratio4x3,
+              CropAspectRatioPreset.ratio16x9,
+            ],
+          ),
+          IOSUiSettings(
+            title: 'Edit image',
+            aspectRatioLockEnabled: false,
+            aspectRatioPresets: const [
+              CropAspectRatioPreset.original,
+              CropAspectRatioPreset.square,
+              CropAspectRatioPreset.ratio4x3,
+              CropAspectRatioPreset.ratio16x9,
+            ],
+          ),
+        ],
       );
-      if (edited == null) return;
-      await service.overwriteBytes(entry.name!, edited);
+      if (cropped == null) return;
+      final bytes = await File(cropped.path).readAsBytes();
+      await service.overwriteBytes(entry.name!, bytes);
       if (mounted) setState(() {});
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Edit failed: $e'),
-            duration: const Duration(seconds: 2),
-          ),
-        );
+        showAppSnack(context, 'Edit failed: $e',
+            duration: const Duration(seconds: 2));
       }
     }
+  }
+
+  /// Public entry point used by preview-mode long-press. Looks up the first
+  /// entry matching [name] and opens the same image menu edit-mode uses.
+  Future<void> showImageMenuFor(String name) async {
+    final idx = _entries.indexWhere((e) => e.isImage && e.name == name);
+    if (idx < 0) return;
+    await _showImageMenu(idx);
   }
 
   Future<void> _showImageMenu(int index) async {
@@ -401,6 +446,26 @@ class BlockEditorState extends ConsumerState<BlockEditor> {
       final ctrl = target.controller!;
       ctrl.selection = TextSelection.collapsed(offset: ctrl.text.length);
     }
+  }
+
+  /// Focus the nth text block (image entries skipped). If [charOffset] is
+  /// provided, the caret lands at that offset, clamped to the block's text
+  /// length; otherwise the caret goes to the end. Falls back to
+  /// [focusLastTextBlock] when [textIndex] is out of range.
+  void focusTextBlockAt(int textIndex, {int? charOffset}) {
+    int seen = 0;
+    for (final e in _entries) {
+      if (e.isImage) continue;
+      if (seen == textIndex) {
+        e.focus!.requestFocus();
+        final ctrl = e.controller!;
+        final offset = (charOffset ?? ctrl.text.length).clamp(0, ctrl.text.length);
+        ctrl.selection = TextSelection.collapsed(offset: offset);
+        return;
+      }
+      seen++;
+    }
+    focusLastTextBlock();
   }
 
   @override

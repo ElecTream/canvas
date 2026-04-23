@@ -41,6 +41,10 @@ android {
             // TODO: Add your own signing config for the release build.
             // Signing with the debug keys for now, so `flutter run --release` works.
             signingConfig = signingConfigs.getByName("debug")
+            // R8 minify/shrink was tried in 0.8.13 and made the APK larger:
+            // Flutter engine .so + Dart AOT snapshot dominate size, and the
+            // `-keep` rules required for Firebase / googleapis reflection
+            // safety leave nothing meaningful for R8 to strip. Leaving off.
         }
     }
 }

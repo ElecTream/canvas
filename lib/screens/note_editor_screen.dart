@@ -11,6 +11,7 @@ import 'package:uuid/uuid.dart';
 import '../models/note.dart';
 import '../providers/image_provider.dart';
 import '../providers/notes_provider.dart';
+import '../utils/app_snackbar.dart';
 import '../widgets/attachment_strip.dart';
 import '../widgets/block_editor.dart';
 import '../widgets/glass_app_bar.dart';
@@ -45,7 +46,9 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
   List<NoteBlock> _blocks = [];
   bool _isPinned = false;
   bool _isDirty = false;
-  bool _previewMode = false;
+  // Existing notes open rendered; new notes open in source mode so the
+  // keyboard can appear immediately.
+  late bool _previewMode;
   Timer? _autosaveDebounce;
 
   bool get _isEditing => widget.note != null;
@@ -65,10 +68,27 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     _attachments = List<String>.from(_initialAttachments);
     _blocks = List<NoteBlock>.from(_initialBlocks);
     _isPinned = _initialPinned;
+    _previewMode = _isEditing;
     _titleController = TextEditingController(text: _initialTitle);
     _titleController.addListener(_recomputeDirty);
     _heroTag = 'note-${widget.note?.id ?? const Uuid().v4()}';
     WidgetsBinding.instance.addObserver(this);
+  }
+
+  void _enterSourceMode() => _enterSourceModeAt(null);
+
+  void _enterSourceModeAt(int? textIndex, {int? charOffset}) {
+    if (!_previewMode) return;
+    setState(() => _previewMode = false);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      if (textIndex == null) {
+        _blockEditorKey.currentState?.focusLastTextBlock();
+      } else {
+        _blockEditorKey.currentState
+            ?.focusTextBlockAt(textIndex, charOffset: charOffset);
+      }
+    });
   }
 
   @override
@@ -201,13 +221,12 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
               noteService.deleteNote(deleted.id);
               Navigator.pop(ctx);
 
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: const Text('Note deleted'),
-                  action: SnackBarAction(
-                    label: 'Undo',
-                    onPressed: () => noteService.saveNote(deleted),
-                  ),
+              showAppSnack(
+                context,
+                'Note deleted',
+                action: SnackBarAction(
+                  label: 'Undo',
+                  onPressed: () => noteService.saveNote(deleted),
                 ),
               );
 
@@ -298,9 +317,8 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
           title: Text(_isEditing ? 'Edit' : 'New note'),
           actions: [
             IconButton(
-              tooltip: _previewMode ? 'Exit preview' : 'Preview markdown',
-              icon: Icon(
-                  _previewMode ? Icons.visibility_off : Icons.visibility),
+              tooltip: _previewMode ? 'Edit source' : 'Rendered view',
+              icon: Icon(_previewMode ? Icons.edit_note : Icons.visibility),
               onPressed: () => setState(() => _previewMode = !_previewMode),
             ),
             IconButton(
@@ -385,7 +403,13 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
                             child: SingleChildScrollView(
                               child: _previewMode
                                   ? _PreviewBody(
-                                      blocks: _blocks, accent: teal)
+                                      blocks: _blocks,
+                                      accent: teal,
+                                      onTextBlockTap: (index, offset) =>
+                                          _enterSourceModeAt(index,
+                                              charOffset: offset),
+                                      onEmptyTap: _enterSourceMode,
+                                    )
                                   : BlockEditor(
                                       key: _blockEditorKey,
                                       initialBlocks: _initialBlocks,
@@ -431,9 +455,17 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
 }
 
 class _PreviewBody extends ConsumerWidget {
-  const _PreviewBody({required this.blocks, required this.accent});
+  const _PreviewBody({
+    required this.blocks,
+    required this.accent,
+    required this.onTextBlockTap,
+    required this.onEmptyTap,
+  });
+
   final List<NoteBlock> blocks;
   final Color accent;
+  final void Function(int textIndex, int charOffset) onTextBlockTap;
+  final VoidCallback onEmptyTap;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -490,15 +522,33 @@ class _PreviewBody extends ConsumerWidget {
     );
 
     final children = <Widget>[];
+    int textIndex = 0;
     for (final b in blocks) {
       if (b is TextBlock) {
+        final currentIdx = textIndex;
+        textIndex++;
         if (b.text.trim().isEmpty) continue;
-        children.add(Padding(
-          padding: const EdgeInsets.symmetric(vertical: 4),
-          child: MarkdownBlock(
-            data: b.text,
-            selectable: true,
-            config: config,
+        children.add(LayoutBuilder(
+          builder: (ctx, constraints) => GestureDetector(
+            behavior: HitTestBehavior.opaque,
+            onTapDown: (d) {
+              final offset = _offsetFromTap(
+                  b.text, d.localPosition, constraints.maxWidth);
+              onTextBlockTap(currentIdx, offset);
+            },
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 4),
+              child: IgnorePointer(
+                // Swallow in-block gestures (link taps, selection) so our
+                // tap-to-edit wins. If selectable preview is ever wanted
+                // again, promote to a long-press entry instead.
+                child: MarkdownBlock(
+                  data: b.text,
+                  selectable: false,
+                  config: config,
+                ),
+              ),
+            ),
           ),
         ));
       } else if (b is ImageBlock) {
@@ -525,19 +575,44 @@ class _PreviewBody extends ConsumerWidget {
     }
 
     if (children.isEmpty) {
-      return Padding(
-        padding: const EdgeInsets.all(24),
-        child: Text(
-          'Nothing to preview',
-          style: TextStyle(color: Colors.white.withValues(alpha: 0.4)),
+      return GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: onEmptyTap,
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Text(
+            'Nothing to preview',
+            style: TextStyle(color: Colors.white.withValues(alpha: 0.4)),
+          ),
         ),
       );
     }
+
+    // A translucent gutter at the bottom so tapping below the last block
+    // still enters source mode (at end of last text block).
+    children.add(GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: onEmptyTap,
+      child: const SizedBox(height: 120),
+    ));
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       mainAxisSize: MainAxisSize.min,
       children: children,
     );
+  }
+
+  int _offsetFromTap(String text, Offset tap, double maxWidth) {
+    if (text.isEmpty) return 0;
+    final painter = TextPainter(
+      text: TextSpan(
+        text: text,
+        style: const TextStyle(fontSize: 16, height: 1.55),
+      ),
+      textDirection: TextDirection.ltr,
+    )..layout(maxWidth: maxWidth);
+    final pos = painter.getPositionForOffset(tap);
+    return pos.offset.clamp(0, text.length);
   }
 }

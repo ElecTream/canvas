@@ -12,7 +12,28 @@
           "package_name": "com.electream.canvas"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "1085708993796-8f5k5lkdj3gcjikkf60j6n6l26s7756s.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.electream.canvas",
+            "certificate_hash": "017ef7c5dbb3314dc2d0fcaa9c1b6eb2ea22443a"
+          }
+        },
+        {
+          "client_id": "1085708993796-9gs9ctnhd5v9a7e9m6v2ccbcg5bljva3.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.electream.canvas",
+            "certificate_hash": "0279e24fab9ed76181737e98109ab4892d76b74b"
+          }
+        },
+        {
+          "client_id": "1085708993796-r5notec890letelfusg7ddtttdk7q8q8.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyBRofN9xSGc-YEzQVqk6MJ1qQlNr5oySNA"
@@ -20,7 +41,19 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "1085708993796-r5notec890letelfusg7ddtttdk7q8q8.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "1085708993796-2tmk7182a70crvvnilevvk1mqnh61685.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.electream.canvas"
+              }
+            }
+          ]
         }
       }
     }

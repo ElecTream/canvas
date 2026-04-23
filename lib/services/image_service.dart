@@ -2,6 +2,8 @@ import 'dart:async';
 import 'dart:io';
 import 'dart:typed_data';
 
+import 'package:crypto/crypto.dart' as crypto;
+import 'package:flutter/foundation.dart';
 import 'package:flutter/painting.dart';
 import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:image_picker/image_picker.dart';
@@ -10,12 +12,27 @@ import 'package:path_provider/path_provider.dart';
 import 'package:super_clipboard/super_clipboard.dart';
 import 'package:uuid/uuid.dart';
 
-class ImageService {
+import '../data/images_dao.dart';
+
+class ImageService extends ChangeNotifier {
+  ImageService(this._imagesDao);
+
   static const int maxEdgePx = 2048;
   static const int quality = 85;
 
+  final ImagesDao _imagesDao;
   final ImagePicker _picker = ImagePicker();
   Directory? _cachedDir;
+
+  // Per-filename edit counter. Bumped on overwriteBytes so display widgets
+  // can key their `Image.file` by `img-$name-$rev` and dodge the stale frame
+  // that `gaplessPlayback: true` otherwise pins on the stream.
+  final Map<String, int> _revisions = {};
+  int revisionFor(String name) => _revisions[name] ?? 0;
+  void _bumpRevision(String name) {
+    _revisions[name] = (_revisions[name] ?? 0) + 1;
+    notifyListeners();
+  }
 
   Future<Directory> dir() async {
     if (_cachedDir != null) return _cachedDir!;
@@ -63,7 +80,36 @@ class ImageService {
     final name = '${const Uuid().v4()}.jpg';
     final f = File(p.join((await dir()).path, name));
     await f.writeAsBytes(compressed, flush: true);
+    await _recordBlob(name, compressed);
     return name;
+  }
+
+  Future<void> _recordBlob(String filename, Uint8List bytes) async {
+    final sha = crypto.sha256.convert(bytes).toString();
+    await _imagesDao.record(
+      filename: filename,
+      sha256: sha,
+      sizeBytes: bytes.length,
+    );
+  }
+
+  /// Ingest a blob fetched from Drive. Writes the file to disk if missing
+  /// and records its SHA so pull-completions don't trigger spurious re-pushes.
+  Future<void> ingestFromRemote({
+    required String filename,
+    required String sha256,
+    required Uint8List bytes,
+  }) async {
+    final f = File(p.join((await dir()).path, filename));
+    if (!await f.exists()) {
+      await f.writeAsBytes(bytes, flush: true);
+    }
+    await _imagesDao.record(
+      filename: filename,
+      sha256: sha256,
+      sizeBytes: bytes.length,
+    );
+    await _imagesDao.markUploaded(filename, DateTime.now().toUtc());
   }
 
   Future<String> saveFile(File src) async =>
@@ -78,7 +124,21 @@ class ImageService {
     final compressed = await compress(raw);
     final f = File(pathFor(name));
     await f.writeAsBytes(compressed, flush: true);
-    PaintingBinding.instance.imageCache.evict(FileImage(f));
+    // Content changed → recompute hash, reset uploaded flag so the next sync
+    // pushes the new blob to Drive.
+    await _recordBlob(name, compressed);
+    _evictAllForFile(f);
+    _bumpRevision(name);
+  }
+
+  // `Image.file(..., cacheWidth: ...)` wraps FileImage in a ResizeImage whose
+  // cache key we can't reach by hand — evict the raw FileImage, then clear
+  // live + cold entries so the next paint re-reads the bytes off disk.
+  void _evictAllForFile(File f) {
+    final cache = PaintingBinding.instance.imageCache;
+    cache.evict(FileImage(f));
+    cache.clear();
+    cache.clearLiveImages();
   }
 
   Future<XFile?> pickGallery() {
@@ -144,6 +204,7 @@ class ImageService {
   Future<void> delete(String name) async {
     final f = await resolve(name);
     if (await f.exists()) await f.delete();
+    await _imagesDao.deleteByFilename(name);
   }
 
   Future<int> cleanOrphans(Set<String> keep) async {
@@ -155,6 +216,7 @@ class ImageService {
         if (!keep.contains(name)) {
           try {
             await e.delete();
+            await _imagesDao.deleteByFilename(name);
             removed++;
           } catch (_) {}
         }

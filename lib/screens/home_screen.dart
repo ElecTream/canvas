@@ -1,6 +1,7 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 import 'package:intl/intl.dart';
 import 'package:markdown_widget/markdown_widget.dart';
@@ -10,11 +11,13 @@ import '../providers/notes_provider.dart';
 import '../providers/orphan_cleanup_provider.dart';
 import '../providers/tags_provider.dart';
 import '../services/image_service.dart';
+import '../utils/app_snackbar.dart';
 import '../utils/page_routes.dart';
 import '../widgets/glass_app_bar.dart';
 import '../widgets/glass_card.dart';
 import '../widgets/glass_fab.dart';
 import '../widgets/tag_chip.dart';
+import 'archive_screen.dart';
 import 'note_editor_screen.dart';
 import 'settings_screen.dart';
 
@@ -34,6 +37,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   NoteSort _sort = NoteSort.updated;
   String? _selectedTag;
 
+  // Slide-aside: drive home's shift off its OWN route's `secondaryAnimation`.
+  // Every ModalRoute gets one for free — it ticks 0→1 as another route is
+  // pushed on top and 1→0 on pop, using the pushed route's controller. No
+  // timing windows, no null-on-push edge cases, no local controller needed.
+  // We just flip `_asideDir` before pushing so the build method knows which
+  // way to slide.
+  double _asideDir = 0; // +1 = slide right (Settings), -1 = slide left.
+
   @override
   void initState() {
     super.initState();
@@ -47,6 +58,41 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     _searchController.dispose();
     super.dispose();
   }
+
+  Future<void> _openOverlay(PageRoute<void> route, double dir) async {
+    setState(() => _asideDir = dir);
+    await Navigator.of(context).push<void>(route);
+    if (!mounted) return;
+    // Navigator.push resolves at pop *initiation*, not at pop animation end.
+    // If we reset dir here, home's transform becomes `0 * sec` = 0 for the
+    // entire pop animation and home never slides back in. Wait for home's
+    // secondaryAnimation to actually dismiss before zeroing dir.
+    final secondary = ModalRoute.of(context)?.secondaryAnimation;
+    if (secondary != null &&
+        secondary.status != AnimationStatus.dismissed) {
+      final done = Completer<void>();
+      void listener(AnimationStatus s) {
+        if (s == AnimationStatus.dismissed && !done.isCompleted) {
+          done.complete();
+        }
+      }
+      secondary.addStatusListener(listener);
+      await done.future;
+      secondary.removeStatusListener(listener);
+    }
+    if (!mounted) return;
+    setState(() => _asideDir = 0);
+  }
+
+  Future<void> _openSettings() => _openOverlay(
+        slideFromLeftRoute<void>((_) => const SettingsScreen()),
+        1,
+      );
+
+  Future<void> _openArchive() => _openOverlay(
+        slideFromRightRoute<void>((_) => const ArchiveScreen()),
+        -1,
+      );
 
   void _enterSearch() => setState(() => _searching = true);
 
@@ -107,14 +153,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         },
         onDelete: () {
           Navigator.pop(ctx);
-          noteService.deleteNote(note.id);
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: const Text('Note deleted'),
-              action: SnackBarAction(
-                label: 'Undo',
-                onPressed: () => noteService.saveNote(note),
-              ),
+          noteService.archiveNote(note);
+          showAppSnack(
+            context,
+            'Note archived',
+            action: SnackBarAction(
+              label: 'Undo',
+              onPressed: () => noteService.restoreNote(note),
             ),
           );
         },
@@ -128,7 +173,22 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final allTags = ref.watch(tagsProvider);
     ref.watch(orphanCleanupProvider);
 
-    return Scaffold(
+    final secondary =
+        ModalRoute.of(context)?.secondaryAnimation ?? kAlwaysDismissedAnimation;
+    // Match the overlay route's curves exactly (easeOutCubic forward,
+    // easeInCubic reverse). A single flat easeOutCubic on raw
+    // secondary.value desyncs pop: settings exits on easeInCubic while
+    // home crawls back on easeOutCubic, leaving a middle gap.
+    return SlideTransition(
+      position: Tween<Offset>(
+        begin: Offset.zero,
+        end: Offset(_asideDir, 0),
+      ).animate(CurvedAnimation(
+        parent: secondary,
+        curve: Curves.easeOutCubic,
+        reverseCurve: Curves.easeInCubic,
+      )),
+      child: Scaffold(
       backgroundColor: Colors.transparent,
       extendBodyBehindAppBar: true,
       appBar: _buildAppBar(),
@@ -136,7 +196,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         top: false,
         child: notesAsync.when(
           data: (notes) {
-            final filtered = _apply(notes);
+            final active = notes.where((n) => !n.isArchived).toList();
+            final filtered = _apply(active);
             final pinned = filtered.where((n) => n.isPinned).toList();
             final regular = filtered.where((n) => !n.isPinned).toList();
 
@@ -187,6 +248,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         icon: Icons.add,
         tooltip: 'New note',
       ),
+      ),
     );
   }
 
@@ -223,6 +285,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     }
 
     return GlassAppBar(
+      leading: IconButton(
+        icon: const Icon(Icons.settings_outlined),
+        tooltip: 'Settings',
+        onPressed: _openSettings,
+      ),
       title: const Text('Canvas'),
       actions: [
         IconButton(
@@ -232,12 +299,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         ),
         sortButton,
         IconButton(
-          icon: const Icon(Icons.settings_outlined),
-          tooltip: 'Settings',
-          onPressed: () => Navigator.push(
-            context,
-            fadeScaleRoute((_) => const SettingsScreen()),
-          ),
+          icon: const Icon(Icons.archive_outlined),
+          tooltip: 'Archive',
+          onPressed: _openArchive,
         ),
       ],
     );
@@ -370,20 +434,10 @@ class _NoteGrid extends StatelessWidget {
         childCount: notes.length,
         itemBuilder: (context, index) {
           final note = notes[index];
-          return AnimationConfiguration.staggeredGrid(
-            position: index,
-            columnCount: cols,
-            duration: const Duration(milliseconds: 350),
-            child: ScaleAnimation(
-              scale: 0.96,
-              child: FadeInAnimation(
-                child: _NoteCard(
-                  note: note,
-                  onTap: () => onTap(note),
-                  onLongPress: () => onLongPress(note),
-                ),
-              ),
-            ),
+          return _NoteCard(
+            note: note,
+            onTap: () => onTap(note),
+            onLongPress: () => onLongPress(note),
           );
         },
       ),
@@ -422,7 +476,7 @@ class _NoteCard extends StatelessWidget {
             Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Expanded(
+                Flexible(
                   child: Text(
                     note.title.isEmpty ? 'Untitled' : note.title,
                     style: const TextStyle(

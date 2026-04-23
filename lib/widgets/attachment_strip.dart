@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../providers/image_provider.dart';
 import '../services/image_service.dart';
+import '../utils/app_snackbar.dart';
 import 'glass_card.dart';
 import 'image_viewer.dart';
 
@@ -252,9 +253,7 @@ class AttachmentStrip extends ConsumerWidget {
   }
 
   void _snack(BuildContext context, String msg) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(msg), duration: const Duration(seconds: 2)),
-    );
+    showAppSnack(context, msg, duration: const Duration(seconds: 2));
   }
 }
 

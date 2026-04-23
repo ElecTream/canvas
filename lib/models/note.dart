@@ -87,6 +87,7 @@ class Note {
   final List<String> tags;
   final List<String> attachments;
   final bool isPinned;
+  final bool isArchived;
   final Timestamp createdAt;
   final Timestamp updatedAt;
 
@@ -98,6 +99,7 @@ class Note {
     required this.tags,
     required this.attachments,
     required this.isPinned,
+    required this.isArchived,
     required this.createdAt,
     required this.updatedAt,
   });
@@ -110,6 +112,7 @@ class Note {
     List<String>? tags,
     List<String>? attachments,
     bool? isPinned,
+    bool? isArchived,
     Timestamp? createdAt,
     Timestamp? updatedAt,
   }) {
@@ -124,6 +127,7 @@ class Note {
       tags: tags ?? const [],
       attachments: attachments ?? const [],
       isPinned: isPinned ?? false,
+      isArchived: isArchived ?? false,
       createdAt: createdAt ?? Timestamp.now(),
       updatedAt: updatedAt ?? Timestamp.now(),
     );
@@ -136,6 +140,7 @@ class Note {
     List<String>? tags,
     List<String>? attachments,
     bool? isPinned,
+    bool? isArchived,
     Timestamp? createdAt,
     Timestamp? updatedAt,
   }) {
@@ -147,6 +152,7 @@ class Note {
       tags: tags ?? this.tags,
       attachments: attachments ?? this.attachments,
       isPinned: isPinned ?? this.isPinned,
+      isArchived: isArchived ?? this.isArchived,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
     );
@@ -160,6 +166,7 @@ class Note {
     final rawTags = json['tags'];
     final rawAttachments = json['attachments'];
     final rawIsPinned = json['isPinned'];
+    final rawIsArchived = json['isArchived'];
     final rawCreatedAt = json['createdAt'];
     final rawUpdatedAt = json['updatedAt'];
 
@@ -175,6 +182,7 @@ class Note {
           ? rawAttachments.whereType<String>().toList()
           : const [],
       isPinned: rawIsPinned is bool ? rawIsPinned : false,
+      isArchived: rawIsArchived is bool ? rawIsArchived : false,
       createdAt: rawCreatedAt is Timestamp ? rawCreatedAt : Timestamp.now(),
       updatedAt: rawUpdatedAt is Timestamp ? rawUpdatedAt : Timestamp.now(),
     );
@@ -189,6 +197,7 @@ class Note {
       'tags': tags,
       'attachments': attachments,
       'isPinned': isPinned,
+      'isArchived': isArchived,
       'createdAt': createdAt,
       'updatedAt': updatedAt,
     };
