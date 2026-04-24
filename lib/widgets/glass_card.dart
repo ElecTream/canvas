@@ -2,6 +2,7 @@ import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../providers/contrast_provider.dart';
 import '../providers/palette_provider.dart';
 import '../theme/palettes.dart';
 import '../theme/surface_colors.dart';
@@ -36,22 +37,43 @@ class GlassCard extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final radius = BorderRadius.circular(borderRadius);
     final palette = paletteColorsOf(ref.watch(paletteProvider));
+    final contrast = ref.watch(contrastProvider).scale;
     final brightness = Theme.of(context).brightness;
+    final isDark = brightness == Brightness.dark;
     final blobs = palette.blobsFor(brightness);
     final avg = (blobs[0].computeLuminance() +
             blobs[1].computeLuminance() +
             blobs[2].computeLuminance()) /
         3;
     final t = avg.clamp(0.0, 1.0);
-    final minA = readable ? 0.40 : 0.10;
-    final maxA = readable ? 0.65 : 0.26;
-    final alpha = minA + (maxA - minA) * t;
-    // Readable cards darken/lighten to keep body text crisp against blobs;
-    // non-readable cards keep the frosted look.
-    final base = readable
-        ? readableBase(context)
-        : (brightness == Brightness.dark ? Colors.white : Colors.black);
-    final fill = tint ?? base.withValues(alpha: alpha);
+
+    // Light mode favors white frost across the board: non-readable cards
+    // become brighter panes over pastel blobs, readable cards pick up a
+    // subtle gray so black text reads without tinting the whole surface.
+    final Color base;
+    final double alpha;
+    if (readable) {
+      if (isDark) {
+        base = Colors.black;
+        alpha = (0.40 + 0.25 * t) * contrast;
+      } else {
+        // Slight gray darken — text (onSurface) still reads crisp, card
+        // remains distinct from scaffold without going jet black.
+        base = Colors.black;
+        alpha = (0.05 + 0.06 * t) * contrast;
+      }
+    } else {
+      if (isDark) {
+        base = Colors.white;
+        alpha = (0.10 + 0.16 * t) * contrast;
+      } else {
+        // Light + non-readable: push white opacity up so tiles pop against
+        // pastel blobs instead of disappearing into the surface.
+        base = Colors.white;
+        alpha = (0.35 + 0.25 * t) * contrast;
+      }
+    }
+    final fill = tint ?? base.withValues(alpha: alpha.clamp(0.0, 1.0));
 
     Widget inner = AnimatedContainer(
       duration: const Duration(milliseconds: 350),
@@ -60,7 +82,7 @@ class GlassCard extends ConsumerWidget {
         color: fill,
         borderRadius: radius,
         border: Border.all(
-          color: surfaceTint(context, borderAlpha),
+          color: surfaceTint(context, borderAlpha * contrast),
           width: 0.8,
         ),
       ),

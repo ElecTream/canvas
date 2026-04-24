@@ -15,6 +15,7 @@ import '../providers/palette_provider.dart';
 import '../providers/sync_provider.dart';
 import '../services/auth_service.dart';
 import '../sync/sync_service.dart';
+import '../providers/contrast_provider.dart';
 import '../providers/theme_mode_provider.dart';
 import '../theme/palettes.dart';
 import '../theme/surface_colors.dart';
@@ -70,6 +71,8 @@ class SettingsScreen extends ConsumerWidget {
           const SizedBox(height: 20),
           const _SectionLabel('Theme'),
           const _ThemeModeCard(),
+          const SizedBox(height: 12),
+          const _ContrastCard(),
           const SizedBox(height: 20),
           const _SectionLabel('Appearance'),
           GlassCard(
@@ -966,6 +969,62 @@ class _ThemeModeCard extends ConsumerWidget {
               selected: {mode},
               onSelectionChanged: (s) =>
                   ref.read(themeModeProvider.notifier).set(s.first),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ContrastCard extends ConsumerWidget {
+  const _ContrastCard();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final level = ref.watch(contrastProvider);
+    return GlassCard(
+      padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Contrast',
+            style: TextStyle(fontWeight: FontWeight.w600, fontSize: 15),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            switch (level) {
+              ContrastLevel.soft => 'Lighter glass, gentler blur',
+              ContrastLevel.standard => 'Balanced glass panels',
+              ContrastLevel.bold => 'More opaque panels, stronger edges',
+            },
+            style: TextStyle(
+              color: onSurfaceMuted(context, 0.6),
+              fontSize: 12.5,
+            ),
+          ),
+          const SizedBox(height: 14),
+          SizedBox(
+            width: double.infinity,
+            child: SegmentedButton<ContrastLevel>(
+              segments: const [
+                ButtonSegment(
+                  value: ContrastLevel.soft,
+                  label: Text('Soft'),
+                ),
+                ButtonSegment(
+                  value: ContrastLevel.standard,
+                  label: Text('Standard'),
+                ),
+                ButtonSegment(
+                  value: ContrastLevel.bold,
+                  label: Text('Bold'),
+                ),
+              ],
+              selected: {level},
+              onSelectionChanged: (s) =>
+                  ref.read(contrastProvider.notifier).set(s.first),
             ),
           ),
         ],
