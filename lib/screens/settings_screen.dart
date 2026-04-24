@@ -34,11 +34,14 @@ class SettingsScreen extends ConsumerWidget {
       extendBodyBehindAppBar: true,
       appBar: GlassAppBar(
         automaticallyImplyLeading: false,
-        title: const Text('Settings'),
         actions: [
+          const Text(
+            'Settings',
+            style: TextStyle(fontSize: 20, fontWeight: FontWeight.w500),
+          ),
           IconButton(
             tooltip: 'Back',
-            icon: const Icon(Icons.arrow_back),
+            icon: const Icon(Icons.arrow_forward),
             onPressed: () => Navigator.of(context).maybePop(),
           ),
         ],
