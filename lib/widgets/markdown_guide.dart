@@ -26,6 +26,7 @@ class _MarkdownGuideSheet extends StatelessWidget {
         padding: const EdgeInsets.fromLTRB(12, 12, 12, 12),
         child: GlassCard(
           padding: const EdgeInsets.fromLTRB(20, 14, 14, 16),
+          readable: true,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
