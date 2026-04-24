@@ -12,7 +12,8 @@
       "Bash(python -c 'import sys,json *)",
       "Bash(flutter test *)",
       "PowerShell(.\\\\build.ps1 2>&1 | Select-Object -Last 5)",
-      "Bash(pwsh -File ./build.ps1)"
+      "Bash(pwsh -File ./build.ps1)",
+      "Bash(./build.ps1 *)"
     ]
   }
 }
