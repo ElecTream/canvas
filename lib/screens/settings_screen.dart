@@ -32,7 +32,17 @@ class SettingsScreen extends ConsumerWidget {
     return Scaffold(
       backgroundColor: Colors.transparent,
       extendBodyBehindAppBar: true,
-      appBar: const GlassAppBar(title: Text('Settings')),
+      appBar: GlassAppBar(
+        automaticallyImplyLeading: false,
+        title: const Text('Settings'),
+        actions: [
+          IconButton(
+            tooltip: 'Back',
+            icon: const Icon(Icons.arrow_back),
+            onPressed: () => Navigator.of(context).maybePop(),
+          ),
+        ],
+      ),
       body: SafeArea(
         top: false,
         child: ListView(
