@@ -49,6 +49,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
   // Existing notes open rendered; new notes open in source mode so the
   // keyboard can appear immediately.
   late bool _previewMode;
+  bool _showAttachments = false;
   Timer? _autosaveDebounce;
 
   // After a new-note autosave, the generated id lives here so subsequent
@@ -347,6 +348,18 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
               onPressed: () => showMarkdownGuide(context),
             ),
             IconButton(
+              tooltip: _showAttachments ? 'Hide photos' : 'Show photos',
+              icon: Badge.count(
+                count: _attachments.length,
+                isLabelVisible: _attachments.isNotEmpty,
+                child: Icon(_showAttachments
+                    ? Icons.photo_library
+                    : Icons.photo_library_outlined),
+              ),
+              onPressed: () =>
+                  setState(() => _showAttachments = !_showAttachments),
+            ),
+            IconButton(
               tooltip: _isPinned ? 'Unpin' : 'Pin',
               icon: Icon(
                 _isPinned ? Icons.push_pin : Icons.push_pin_outlined,
@@ -448,19 +461,31 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
                                     ),
                             ),
                           ),
-                          const SizedBox(height: 8),
-                          Divider(
-                            color: Colors.white.withValues(alpha: 0.08),
-                            height: 1,
-                          ),
-                          AttachmentStrip(
-                            names: _attachments,
-                            onChange: (next) {
-                              setState(() => _attachments = next);
-                              _recomputeDirty();
-                            },
-                            onInsertInline: _insertInline,
-                            onRemoveEverywhere: _removeEverywhere,
+                          AnimatedSize(
+                            duration: const Duration(milliseconds: 200),
+                            curve: Curves.easeOut,
+                            child: _showAttachments
+                                ? Column(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      const SizedBox(height: 8),
+                                      Divider(
+                                        color: Colors.white
+                                            .withValues(alpha: 0.08),
+                                        height: 1,
+                                      ),
+                                      AttachmentStrip(
+                                        names: _attachments,
+                                        onChange: (next) {
+                                          setState(() => _attachments = next);
+                                          _recomputeDirty();
+                                        },
+                                        onInsertInline: _insertInline,
+                                        onRemoveEverywhere: _removeEverywhere,
+                                      ),
+                                    ],
+                                  )
+                                : const SizedBox.shrink(),
                           ),
                         ],
                       ),
