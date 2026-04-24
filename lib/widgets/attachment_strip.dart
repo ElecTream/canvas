@@ -73,6 +73,7 @@ class AttachmentStrip extends ConsumerWidget {
           padding: const EdgeInsets.all(12),
           child: GlassCard(
             padding: const EdgeInsets.symmetric(vertical: 6),
+            readable: true,
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
@@ -180,6 +181,7 @@ class AttachmentStrip extends ConsumerWidget {
           padding: const EdgeInsets.all(12),
           child: GlassCard(
             padding: const EdgeInsets.symmetric(vertical: 6),
+            readable: true,
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
