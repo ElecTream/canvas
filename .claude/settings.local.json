@@ -11,7 +11,8 @@
       "Bash(awk 'NR==11 || NR==12' C:/Users/leeam/.claude/projects/C--Users-leeam-Documents-Github-canvas/1958b901-35e6-41e3-97e2-1c56f59ad881.jsonl)",
       "Bash(python -c 'import sys,json *)",
       "Bash(flutter test *)",
-      "PowerShell(.\\\\build.ps1 2>&1 | Select-Object -Last 5)"
+      "PowerShell(.\\\\build.ps1 2>&1 | Select-Object -Last 5)",
+      "Bash(pwsh -File ./build.ps1)"
     ]
   }
 }

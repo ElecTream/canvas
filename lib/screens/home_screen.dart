@@ -778,8 +778,10 @@ class _HeroThumbState extends ConsumerState<_HeroThumb> {
         ),
       );
     }
+    final rev = service.revisionFor(widget.name);
     return Image.file(
       f,
+      key: ValueKey('img-${widget.name}-$rev'),
       fit: BoxFit.cover,
       cacheWidth: 600,
       gaplessPlayback: true,

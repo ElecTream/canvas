@@ -244,19 +244,18 @@ class BlockEditorState extends ConsumerState<BlockEditor> {
     final entry = _entries[index];
     final service = ref.read(imageServiceProvider);
     final file = service.resolveSync(entry.name!);
-    if (!await file.exists()) return;
 
     // image_cropper ships native Android/iOS UI only; desktop/web fall back
     // to a polite no-op snack so the feature doesn't crash off-platform.
     if (kIsWeb || !(Platform.isAndroid || Platform.isIOS)) {
-      if (mounted) {
-        showAppSnack(context, 'Image editing only available on Android / iOS',
-            duration: const Duration(seconds: 2));
-      }
+      showAppSnack(context, 'Image editing only available on Android / iOS',
+          duration: const Duration(seconds: 2));
       return;
     }
 
-    final theme = Theme.of(context);
+    final accent = Theme.of(context).colorScheme.secondary;
+    if (!await file.exists()) return;
+
     try {
       final cropped = await ImageCropper().cropImage(
         sourcePath: file.path,
@@ -267,9 +266,9 @@ class BlockEditorState extends ConsumerState<BlockEditor> {
             toolbarTitle: 'Edit image',
             toolbarColor: Colors.black,
             toolbarWidgetColor: Colors.white,
-            statusBarColor: Colors.black,
+            statusBarLight: false,
             backgroundColor: Colors.black,
-            activeControlsWidgetColor: theme.colorScheme.secondary,
+            activeControlsWidgetColor: accent,
             initAspectRatio: CropAspectRatioPreset.original,
             lockAspectRatio: false,
             hideBottomControls: false,
@@ -328,6 +327,7 @@ class BlockEditorState extends ConsumerState<BlockEditor> {
           padding: const EdgeInsets.all(12),
           child: GlassCard(
             padding: const EdgeInsets.symmetric(vertical: 6),
+            readable: true,
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
@@ -686,6 +686,7 @@ class _ResizableInlineImageState
     final file = service.resolveSync(widget.name);
     final exists = file.existsSync();
     final maxH = MediaQuery.of(context).size.height * 0.6;
+    final rev = service.revisionFor(widget.name);
 
     return Stack(
       children: [
@@ -703,6 +704,7 @@ class _ResizableInlineImageState
                         tag: 'image-${file.path}',
                         child: Image.file(
                           file,
+                          key: ValueKey('img-${widget.name}-$rev'),
                           fit: BoxFit.contain,
                           cacheWidth: 800,
                           gaplessPlayback: true,

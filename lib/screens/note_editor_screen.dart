@@ -51,7 +51,13 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
   late bool _previewMode;
   Timer? _autosaveDebounce;
 
+  // After a new-note autosave, the generated id lives here so subsequent
+  // autosaves upsert the same row instead of inserting a new one each time
+  // (otherwise typing "hello" with a 2s debounce spawns N duplicate rows).
+  String? _persistedId;
+
   bool get _isEditing => widget.note != null;
+  String? get _currentId => widget.note?.id ?? _persistedId;
 
   @override
   void initState() {
@@ -88,6 +94,16 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
         _blockEditorKey.currentState
             ?.focusTextBlockAt(textIndex, charOffset: charOffset);
       }
+    });
+  }
+
+  // Preview-mode long-press on an inline image: flip to source mode, then
+  // pop the same image-options sheet the edit mode uses.
+  void _enterSourceModeAndShowImageMenu(String name) {
+    if (_previewMode) setState(() => _previewMode = false);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      _blockEditorKey.currentState?.showImageMenuFor(name);
     });
   }
 
@@ -165,8 +181,10 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
       return;
     }
 
+    final id = _currentId ?? const Uuid().v4();
+    _persistedId ??= id;
     final noteToSave = Note(
-      id: widget.note?.id,
+      id: id,
       title: title.isEmpty ? 'Untitled Note' : title,
       blocks: _blocks,
       tags: _tags,
@@ -184,8 +202,10 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     if (_isEffectivelyEmpty()) return;
     final noteService = ref.read(noteServiceProvider);
     final title = _titleController.text;
+    final id = _currentId ?? const Uuid().v4();
+    _persistedId ??= id;
     final noteToSave = Note(
-      id: widget.note?.id,
+      id: id,
       title: title.isEmpty ? 'Untitled Note' : title,
       blocks: _blocks,
       tags: _tags,
@@ -409,6 +429,8 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
                                           _enterSourceModeAt(index,
                                               charOffset: offset),
                                       onEmptyTap: _enterSourceMode,
+                                      onImageLongPress:
+                                          _enterSourceModeAndShowImageMenu,
                                     )
                                   : BlockEditor(
                                       key: _blockEditorKey,
@@ -460,12 +482,14 @@ class _PreviewBody extends ConsumerWidget {
     required this.accent,
     required this.onTextBlockTap,
     required this.onEmptyTap,
+    required this.onImageLongPress,
   });
 
   final List<NoteBlock> blocks;
   final Color accent;
   final void Function(int textIndex, int charOffset) onTextBlockTap;
   final VoidCallback onEmptyTap;
+  final void Function(String name) onImageLongPress;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -554,19 +578,25 @@ class _PreviewBody extends ConsumerWidget {
       } else if (b is ImageBlock) {
         final file = imageService.resolveSync(b.name);
         if (!file.existsSync()) continue;
+        final rev = imageService.revisionFor(b.name);
         children.add(Padding(
           padding: const EdgeInsets.symmetric(vertical: 6),
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(12),
-            child: ConstrainedBox(
-              constraints: BoxConstraints(
-                maxHeight: MediaQuery.of(context).size.height * 0.6,
-              ),
-              child: Image.file(
-                file,
-                fit: BoxFit.contain,
-                cacheWidth: 800,
-                gaplessPlayback: true,
+          child: GestureDetector(
+            behavior: HitTestBehavior.opaque,
+            onLongPress: () => onImageLongPress(b.name),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(12),
+              child: ConstrainedBox(
+                constraints: BoxConstraints(
+                  maxHeight: MediaQuery.of(context).size.height * 0.6,
+                ),
+                child: Image.file(
+                  file,
+                  key: ValueKey('img-${b.name}-$rev'),
+                  fit: BoxFit.contain,
+                  cacheWidth: 800,
+                  gaplessPlayback: true,
+                ),
               ),
             ),
           ),
