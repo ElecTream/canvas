@@ -19,7 +19,10 @@ class SplashScreen extends StatelessWidget {
                 fontSize: 42,
                 fontWeight: FontWeight.w300,
                 letterSpacing: 8,
-                color: Colors.white.withValues(alpha: 0.95),
+                color: Theme.of(context)
+                    .colorScheme
+                    .onSurface
+                    .withValues(alpha: 0.95),
               ),
             ),
             const SizedBox(height: 32),

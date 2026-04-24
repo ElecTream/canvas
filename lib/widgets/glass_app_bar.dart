@@ -1,5 +1,6 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import '../theme/surface_colors.dart';
 
 class GlassAppBar extends StatelessWidget implements PreferredSizeWidget {
   const GlassAppBar({
@@ -29,10 +30,10 @@ class GlassAppBar extends StatelessWidget implements PreferredSizeWidget {
         filter: ImageFilter.blur(sigmaX: 24, sigmaY: 24),
         child: Container(
           decoration: BoxDecoration(
-            color: Colors.white.withValues(alpha: 0.04),
+            color: surfaceTint(context, 0.04),
             border: Border(
               bottom: BorderSide(
-                color: Colors.white.withValues(alpha: 0.08),
+                color: surfaceTint(context, 0.08),
                 width: 0.5,
               ),
             ),

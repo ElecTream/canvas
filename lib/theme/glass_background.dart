@@ -13,27 +13,42 @@ class GlassBackground extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final palette = ref.watch(paletteProvider);
     final colors = paletteColorsOf(palette);
+    final brightness = Theme.of(context).brightness;
+    final blobs = colors.blobsFor(brightness);
+    final isDark = brightness == Brightness.dark;
 
     return AnimatedContainer(
       duration: const Duration(milliseconds: 350),
       curve: Curves.easeInOut,
-      color: colors.surface,
+      color: colors.surfaceFor(brightness),
       child: Stack(
         children: [
           Positioned(
             top: -120,
             left: -80,
-            child: _Blob(color: colors.blob1, size: 420, opacity: 0.55),
+            child: _Blob(
+              color: blobs[0],
+              size: 420,
+              opacity: isDark ? 0.55 : 0.65,
+            ),
           ),
           Positioned(
             bottom: -160,
             right: -120,
-            child: _Blob(color: colors.blob2, size: 460, opacity: 0.45),
+            child: _Blob(
+              color: blobs[1],
+              size: 460,
+              opacity: isDark ? 0.45 : 0.55,
+            ),
           ),
           Positioned(
             top: 240,
             right: -80,
-            child: _Blob(color: colors.blob3, size: 320, opacity: 0.35),
+            child: _Blob(
+              color: blobs[2],
+              size: 320,
+              opacity: isDark ? 0.35 : 0.45,
+            ),
           ),
           Positioned.fill(
             child: BackdropFilter(

@@ -9,6 +9,7 @@ import 'package:uuid/uuid.dart';
 import '../models/note.dart';
 import '../providers/image_provider.dart';
 import '../services/image_service.dart';
+import '../theme/surface_colors.dart';
 import '../utils/app_snackbar.dart';
 import 'glass_card.dart';
 import 'image_viewer.dart';
@@ -254,6 +255,7 @@ class BlockEditorState extends ConsumerState<BlockEditor> {
     }
 
     final accent = Theme.of(context).colorScheme.secondary;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     if (!await file.exists()) return;
 
     try {
@@ -264,10 +266,10 @@ class BlockEditorState extends ConsumerState<BlockEditor> {
         uiSettings: [
           AndroidUiSettings(
             toolbarTitle: 'Edit image',
-            toolbarColor: Colors.black,
-            toolbarWidgetColor: Colors.white,
-            statusBarLight: false,
-            backgroundColor: Colors.black,
+            toolbarColor: isDark ? Colors.black : Colors.white,
+            toolbarWidgetColor: isDark ? Colors.white : Colors.black,
+            statusBarLight: !isDark,
+            backgroundColor: isDark ? Colors.black : Colors.white,
             activeControlsWidgetColor: accent,
             initAspectRatio: CropAspectRatioPreset.original,
             lockAspectRatio: false,
@@ -569,7 +571,7 @@ class _SizePicker extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(16, 6, 16, 6),
       child: Row(
         children: [
-          const Icon(Icons.aspect_ratio, color: Colors.white70),
+          Icon(Icons.aspect_ratio, color: onSurfaceMuted(context, 0.7)),
           const SizedBox(width: 16),
           const Text('Size', style: TextStyle(fontSize: 16)),
           const Spacer(),
@@ -586,13 +588,15 @@ class _SizePicker extends StatelessWidget {
                   decoration: BoxDecoration(
                     color: selected
                         ? accent.withValues(alpha: 0.22)
-                        : Colors.white.withValues(alpha: 0.06),
+                        : surfaceTint(context, 0.06),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Text(
                     '${(o * 100).round()}%',
                     style: TextStyle(
-                      color: selected ? accent : Colors.white70,
+                      color: selected
+                          ? accent
+                          : onSurfaceMuted(context, 0.7),
                       fontWeight: FontWeight.w600,
                       fontSize: 12,
                     ),
@@ -713,11 +717,11 @@ class _ResizableInlineImageState
                     : SizedBox(
                         height: 160,
                         child: Container(
-                          color: Colors.white.withValues(alpha: 0.05),
+                          color: surfaceTint(context, 0.05),
                           alignment: Alignment.center,
                           child: Icon(
                             Icons.broken_image_outlined,
-                            color: Colors.white.withValues(alpha: 0.4),
+                            color: onSurfaceMuted(context, 0.4),
                             size: 36,
                           ),
                         ),
@@ -757,7 +761,7 @@ class _ResizableInlineImageState
                   width: 4,
                   height: 36,
                   decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.55),
+                    color: surfaceTint(context, 0.55),
                     borderRadius: BorderRadius.circular(2),
                   ),
                 ),

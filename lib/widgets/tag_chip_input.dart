@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers/tags_provider.dart';
+import '../theme/surface_colors.dart';
 import 'tag_chip.dart';
 
 class TagChipInput extends ConsumerStatefulWidget {
@@ -123,9 +124,9 @@ class _AddButton extends StatelessWidget {
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
           decoration: BoxDecoration(
-            color: Colors.white.withValues(alpha: 0.04),
+            color: surfaceTint(context, 0.04),
             border: Border.all(
-              color: Colors.white.withValues(alpha: 0.15),
+              color: onSurfaceMuted(context, 0.15),
               width: 0.8,
               style: BorderStyle.solid,
             ),
@@ -134,12 +135,12 @@ class _AddButton extends StatelessWidget {
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(Icons.add, size: 14, color: Colors.white.withValues(alpha: 0.7)),
+              Icon(Icons.add, size: 14, color: onSurfaceMuted(context, 0.7)),
               const SizedBox(width: 4),
               Text(
                 'Tag',
                 style: TextStyle(
-                  color: Colors.white.withValues(alpha: 0.75),
+                  color: onSurfaceMuted(context, 0.75),
                   fontSize: 12,
                   fontWeight: FontWeight.w500,
                 ),
@@ -190,7 +191,7 @@ class _InlineFieldState extends State<_InlineField> {
       constraints: const BoxConstraints(minWidth: 120, maxWidth: 200),
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 2),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.06),
+        color: surfaceTint(context, 0.06),
         border: Border.all(
           color: Theme.of(context).colorScheme.secondary.withValues(alpha: 0.5),
           width: 0.8,
@@ -206,13 +207,19 @@ class _InlineFieldState extends State<_InlineField> {
               focusNode: widget.focusNode,
               textInputAction: TextInputAction.done,
               autocorrect: false,
-              style: const TextStyle(fontSize: 12, color: Colors.white),
-              decoration: const InputDecoration(
+              style: TextStyle(
+                fontSize: 12,
+                color: Theme.of(context).colorScheme.onSurface,
+              ),
+              decoration: InputDecoration(
                 isDense: true,
-                contentPadding: EdgeInsets.symmetric(vertical: 8),
+                contentPadding: const EdgeInsets.symmetric(vertical: 8),
                 border: InputBorder.none,
                 hintText: 'new-tag',
-                hintStyle: TextStyle(fontSize: 12, color: Colors.white38),
+                hintStyle: TextStyle(
+                  fontSize: 12,
+                  color: onSurfaceMuted(context, 0.38),
+                ),
               ),
               onSubmitted: widget.onSubmitted,
             ),
@@ -223,7 +230,7 @@ class _InlineFieldState extends State<_InlineField> {
             child: Icon(
               Icons.close,
               size: 14,
-              color: Colors.white.withValues(alpha: 0.6),
+              color: onSurfaceMuted(context, 0.6),
             ),
           ),
         ],

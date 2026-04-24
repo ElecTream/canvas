@@ -6,6 +6,7 @@ import 'firebase_options.dart';
 import 'providers/auth_provider.dart';
 import 'providers/palette_provider.dart';
 import 'providers/sync_provider.dart';
+import 'providers/theme_mode_provider.dart';
 import 'screens/home_screen.dart';
 import 'screens/splash_screen.dart';
 import 'services/legacy_firebase_gate.dart';
@@ -71,14 +72,18 @@ class _MyAppState extends ConsumerState<MyApp> with WidgetsBindingObserver {
   Widget build(BuildContext context) {
     final initialize = ref.watch(initializationProvider);
     final palette = ref.watch(paletteProvider);
+    final themeMode = ref.watch(themeModeProvider);
     // Keeps the sign-in → sync trigger alive for the lifetime of the app.
     ref.watch(signInTriggerProvider);
 
+    final colors = paletteColorsOf(palette);
     return MaterialApp(
       title: 'Canvas',
       debugShowCheckedModeBanner: false,
       scaffoldMessengerKey: rootScaffoldMessengerKey,
-      theme: AppTheme.build(paletteColorsOf(palette)),
+      theme: AppTheme.build(colors, Brightness.light),
+      darkTheme: AppTheme.build(colors, Brightness.dark),
+      themeMode: themeMode,
       builder: (context, child) =>
           GlassBackground(child: child ?? const SizedBox.shrink()),
       home: initialize.when(
@@ -117,24 +122,35 @@ class _AuthErrorScreen extends ConsumerWidget {
                     style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
                   ),
                   const SizedBox(height: 8),
-                  const Text(
+                  Text(
                     'Something went wrong while starting Canvas.',
                     textAlign: TextAlign.center,
-                    style: TextStyle(color: Colors.white70),
+                    style: TextStyle(
+                      color: Theme.of(context)
+                          .colorScheme
+                          .onSurface
+                          .withValues(alpha: 0.7),
+                    ),
                   ),
                   if (error != null) ...[
                     const SizedBox(height: 8),
                     Text(
                       error!,
                       textAlign: TextAlign.center,
-                      style: const TextStyle(fontSize: 11, color: Colors.white38),
+                      style: TextStyle(
+                        fontSize: 11,
+                        color: Theme.of(context)
+                            .colorScheme
+                            .onSurface
+                            .withValues(alpha: 0.38),
+                      ),
                     ),
                   ],
                   const SizedBox(height: 24),
                   FilledButton.icon(
                     style: FilledButton.styleFrom(
                       backgroundColor: teal.withValues(alpha: 0.9),
-                      foregroundColor: Colors.black,
+                      foregroundColor: Theme.of(context).colorScheme.onSecondary,
                     ),
                     onPressed: () => ref.invalidate(initializationProvider),
                     icon: const Icon(Icons.refresh),

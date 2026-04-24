@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:markdown_widget/markdown_widget.dart';
+import '../theme/markdown_configs.dart';
+import '../theme/surface_colors.dart';
 import 'glass_card.dart';
 
 void showMarkdownGuide(BuildContext context) {
@@ -51,12 +53,12 @@ class _MarkdownGuideSheet extends StatelessWidget {
               Text(
                 'GitHub Flavored Markdown',
                 style: TextStyle(
-                  color: Colors.white.withValues(alpha: 0.55),
+                  color: onSurfaceMuted(ctx, 0.55),
                   fontSize: 12.5,
                 ),
               ),
               const SizedBox(height: 12),
-              Divider(color: Colors.white.withValues(alpha: 0.08), height: 1),
+              Divider(color: onSurfaceMuted(ctx, 0.08), height: 1),
               Expanded(
                 child: ListView(
                   controller: scrollCtrl,
@@ -130,7 +132,7 @@ class _GuideSection extends StatelessWidget {
       child: Text(
         text.toUpperCase(),
         style: TextStyle(
-          color: Colors.white.withValues(alpha: 0.5),
+          color: onSurfaceMuted(context, 0.5),
           fontSize: 11,
           fontWeight: FontWeight.w700,
           letterSpacing: 2,
@@ -147,65 +149,7 @@ class _GuideEntry extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final teal = Theme.of(context).colorScheme.secondary;
-    final config = MarkdownConfig.darkConfig.copy(
-      configs: [
-        PConfig(
-          textStyle: const TextStyle(
-            fontSize: 14,
-            height: 1.45,
-            color: Colors.white,
-          ),
-        ),
-        H1Config(
-          style: const TextStyle(
-            fontSize: 20,
-            fontWeight: FontWeight.w700,
-            color: Colors.white,
-          ),
-        ),
-        H2Config(
-          style: const TextStyle(
-            fontSize: 17,
-            fontWeight: FontWeight.w700,
-            color: Colors.white,
-          ),
-        ),
-        H3Config(
-          style: const TextStyle(
-            fontSize: 15,
-            fontWeight: FontWeight.w600,
-            color: Colors.white,
-          ),
-        ),
-        LinkConfig(
-          style: TextStyle(color: teal, decoration: TextDecoration.underline),
-        ),
-        CodeConfig(
-          style: TextStyle(
-            backgroundColor: Colors.white.withValues(alpha: 0.08),
-            color: teal,
-            fontFamily: 'monospace',
-            fontSize: 12.5,
-          ),
-        ),
-        PreConfig.darkConfig.copy(
-          decoration: BoxDecoration(
-            color: Colors.black.withValues(alpha: 0.35),
-            borderRadius: BorderRadius.circular(8),
-          ),
-          padding: const EdgeInsets.all(10),
-          textStyle: const TextStyle(
-            fontFamily: 'monospace',
-            fontSize: 12.5,
-            color: Colors.white,
-          ),
-        ),
-        BlockquoteConfig(
-          sideColor: teal,
-          textColor: Colors.white.withValues(alpha: 0.85),
-        ),
-      ],
-    );
+    final config = guideMarkdownConfig(context, teal);
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 14),
@@ -217,10 +161,10 @@ class _GuideEntry extends StatelessWidget {
               Expanded(
                 child: Text(
                   entry.label,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 13,
                     fontWeight: FontWeight.w600,
-                    color: Colors.white,
+                    color: Theme.of(context).colorScheme.onSurface,
                   ),
                 ),
               ),
@@ -242,10 +186,10 @@ class _GuideEntry extends StatelessWidget {
             width: double.infinity,
             padding: const EdgeInsets.fromLTRB(12, 8, 12, 8),
             decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.04),
+              color: surfaceTint(context, 0.04),
               borderRadius: BorderRadius.circular(10),
               border: Border.all(
-                color: Colors.white.withValues(alpha: 0.06),
+                color: surfaceTint(context, 0.06),
                 width: 0.6,
               ),
             ),

@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 
 import '../models/note.dart';
 import '../providers/notes_provider.dart';
+import '../theme/surface_colors.dart';
 import '../utils/app_snackbar.dart';
 import '../widgets/glass_app_bar.dart';
 import '../widgets/glass_card.dart';
@@ -124,7 +125,7 @@ class _ArchivedCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final secondary = Colors.white.withValues(alpha: 0.6);
+    final secondary = onSurfaceMuted(context, 0.6);
     final raw = note.content.trim();
 
     return GlassCard(
@@ -161,7 +162,7 @@ class _ArchivedCard extends StatelessWidget {
               style: TextStyle(
                 fontSize: 12.5,
                 height: 1.4,
-                color: Colors.white.withValues(alpha: 0.7),
+                color: onSurfaceMuted(context, 0.7),
               ),
             ),
           ],
@@ -268,13 +269,13 @@ class _Empty extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             Icon(Icons.archive_outlined,
-                size: 52, color: Colors.white.withValues(alpha: 0.25)),
+                size: 52, color: onSurfaceMuted(context, 0.25)),
             const SizedBox(height: 16),
             Text(
               'No archived notes.\nArchived notes appear here.',
               textAlign: TextAlign.center,
               style: TextStyle(
-                color: Colors.white.withValues(alpha: 0.55),
+                color: onSurfaceMuted(context, 0.55),
                 fontSize: 15,
                 height: 1.5,
               ),

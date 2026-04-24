@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../providers/image_provider.dart';
 import '../services/image_service.dart';
+import '../theme/surface_colors.dart';
 import '../utils/app_snackbar.dart';
 import 'glass_card.dart';
 import 'image_viewer.dart';
@@ -304,11 +305,11 @@ class _Thumb extends ConsumerWidget {
                         gaplessPlayback: true,
                       )
                     : Container(
-                        color: Colors.white.withValues(alpha: 0.05),
+                        color: surfaceTint(context, 0.05),
                         alignment: Alignment.center,
                         child: Icon(
                           Icons.broken_image_outlined,
-                          color: Colors.white.withValues(alpha: 0.4),
+                          color: onSurfaceMuted(context, 0.4),
                           size: 26,
                         ),
                       ),
@@ -365,10 +366,10 @@ class _AddButton extends StatelessWidget {
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(10),
             border: Border.all(
-              color: Colors.white.withValues(alpha: 0.18),
+              color: surfaceTint(context, 0.18),
               width: 1,
             ),
-            color: Colors.white.withValues(alpha: 0.05),
+            color: surfaceTint(context, 0.05),
           ),
           child: Icon(
             Icons.add_a_photo_outlined,

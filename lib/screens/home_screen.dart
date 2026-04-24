@@ -11,6 +11,8 @@ import '../providers/notes_provider.dart';
 import '../providers/orphan_cleanup_provider.dart';
 import '../providers/tags_provider.dart';
 import '../services/image_service.dart';
+import '../theme/markdown_configs.dart';
+import '../theme/surface_colors.dart';
 import '../utils/app_snackbar.dart';
 import '../utils/page_routes.dart';
 import '../widgets/glass_app_bar.dart';
@@ -239,7 +241,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           },
           loading: () => const Center(child: CircularProgressIndicator()),
           error: (err, _) => Center(
-            child: Text('Error: $err', style: const TextStyle(color: Colors.white70)),
+            child: Text('Error: $err',
+                style: TextStyle(color: onSurfaceMuted(context, 0.7))),
           ),
         ),
       ),
@@ -273,10 +276,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         title: TextField(
           controller: _searchController,
           autofocus: true,
-          style: const TextStyle(color: Colors.white, fontSize: 18),
-          decoration: const InputDecoration(
+          style: TextStyle(
+            color: Theme.of(context).colorScheme.onSurface,
+            fontSize: 18,
+          ),
+          decoration: InputDecoration(
             hintText: 'Search notes, tags…',
-            hintStyle: TextStyle(color: Colors.white38),
+            hintStyle: TextStyle(color: onSurfaceMuted(context, 0.38)),
             border: InputBorder.none,
           ),
         ),
@@ -361,11 +367,11 @@ class _AllChip extends StatelessWidget {
           decoration: BoxDecoration(
             color: selected
                 ? teal.withValues(alpha: 0.22)
-                : Colors.white.withValues(alpha: 0.07),
+                : surfaceTint(context, 0.07),
             border: Border.all(
               color: selected
                   ? teal.withValues(alpha: 0.55)
-                  : Colors.white.withValues(alpha: 0.12),
+                  : onSurfaceMuted(context, 0.12),
               width: 0.8,
             ),
             borderRadius: BorderRadius.circular(100),
@@ -373,7 +379,7 @@ class _AllChip extends StatelessWidget {
           child: Text(
             'All',
             style: TextStyle(
-              color: selected ? teal : Colors.white.withValues(alpha: 0.85),
+              color: selected ? teal : onSurfaceMuted(context, 0.85),
               fontSize: 12,
               fontWeight: FontWeight.w600,
             ),
@@ -397,7 +403,7 @@ class _SectionLabel extends StatelessWidget {
           Text(
             text.toUpperCase(),
             style: TextStyle(
-              color: Colors.white.withValues(alpha: 0.5),
+              color: onSurfaceMuted(context, 0.5),
               fontSize: 11,
               fontWeight: FontWeight.w700,
               letterSpacing: 2,
@@ -459,7 +465,7 @@ class _NoteCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final raw = note.content.trim();
-    final secondary = Colors.white.withValues(alpha: 0.6);
+    final secondary = onSurfaceMuted(context, 0.6);
     final teal = Theme.of(context).colorScheme.secondary;
     final hasInlineImages = note.blocks.any((b) => b is ImageBlock);
 
@@ -620,13 +626,13 @@ class _EmptyState extends StatelessWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(icon, size: 52, color: Colors.white.withValues(alpha: 0.25)),
+          Icon(icon, size: 52, color: onSurfaceMuted(context, 0.25)),
           const SizedBox(height: 16),
           Text(
             message,
             textAlign: TextAlign.center,
             style: TextStyle(
-              color: Colors.white.withValues(alpha: 0.55),
+              color: onSurfaceMuted(context, 0.55),
               fontSize: 15,
               height: 1.5,
             ),
@@ -686,53 +692,10 @@ class _CardMarkdown extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final body = Colors.white.withValues(alpha: 0.8);
-    final config = MarkdownConfig.darkConfig.copy(
-      configs: [
-        PConfig(textStyle: TextStyle(fontSize: 12.5, height: 1.4, color: body)),
-        H1Config(
-          style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: Colors.white, height: 1.25),
-        ),
-        H2Config(
-          style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: Colors.white, height: 1.25),
-        ),
-        H3Config(
-          style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Colors.white, height: 1.25),
-        ),
-        H4Config(
-          style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w600, color: Colors.white),
-        ),
-        H5Config(
-          style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w600, color: Colors.white),
-        ),
-        H6Config(
-          style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w600, color: Colors.white),
-        ),
-        LinkConfig(style: TextStyle(color: accent, decoration: TextDecoration.underline, fontSize: 12.5)),
-        CodeConfig(
-          style: TextStyle(
-            backgroundColor: Colors.white.withValues(alpha: 0.08),
-            color: accent,
-            fontFamily: 'monospace',
-            fontSize: 12,
-          ),
-        ),
-        PreConfig.darkConfig.copy(
-          textStyle: TextStyle(color: body, fontSize: 11.5, fontFamily: 'monospace', height: 1.35),
-          decoration: BoxDecoration(
-            color: Colors.black.withValues(alpha: 0.28),
-            borderRadius: BorderRadius.circular(8),
-          ),
-          padding: const EdgeInsets.all(8),
-        ),
-        BlockquoteConfig(sideColor: accent, textColor: body),
-      ],
-    );
-
     return MarkdownBlock(
       data: data,
       selectable: false,
-      config: config,
+      config: cardMarkdownConfig(context, accent),
       generator: MarkdownGenerator(
         linesMargin: const EdgeInsets.symmetric(vertical: 3),
       ),
@@ -769,11 +732,11 @@ class _HeroThumbState extends ConsumerState<_HeroThumb> {
     final f = service.resolveSync(widget.name);
     if (!f.existsSync()) {
       return Container(
-        color: Colors.white.withValues(alpha: 0.04),
+        color: surfaceTint(context, 0.04),
         alignment: Alignment.center,
         child: Icon(
           Icons.broken_image_outlined,
-          color: Colors.white.withValues(alpha: 0.3),
+          color: onSurfaceMuted(context, 0.3),
           size: 32,
         ),
       );

@@ -15,7 +15,9 @@ import '../providers/palette_provider.dart';
 import '../providers/sync_provider.dart';
 import '../services/auth_service.dart';
 import '../sync/sync_service.dart';
+import '../providers/theme_mode_provider.dart';
 import '../theme/palettes.dart';
+import '../theme/surface_colors.dart';
 import '../utils/app_snackbar.dart';
 import '../widgets/glass_app_bar.dart';
 import '../widgets/glass_card.dart';
@@ -66,6 +68,9 @@ class SettingsScreen extends ConsumerWidget {
           const SizedBox(height: 12),
           const _ScanDriveCard(),
           const SizedBox(height: 20),
+          const _SectionLabel('Theme'),
+          const _ThemeModeCard(),
+          const SizedBox(height: 20),
           const _SectionLabel('Appearance'),
           GlassCard(
             padding: const EdgeInsets.fromLTRB(16, 16, 16, 18),
@@ -80,7 +85,7 @@ class SettingsScreen extends ConsumerWidget {
                 Text(
                   palettes[selected]!.label,
                   style: TextStyle(
-                    color: Colors.white.withValues(alpha: 0.6),
+                    color: onSurfaceMuted(context, 0.6),
                     fontSize: 12.5,
                   ),
                 ),
@@ -116,25 +121,28 @@ class SettingsScreen extends ConsumerWidget {
                   color: Theme.of(context).colorScheme.secondary,
                 ),
                 const SizedBox(width: 16),
-                const Expanded(
+                Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
+                      const Text(
                         'Reference',
                         style: TextStyle(fontWeight: FontWeight.w600),
                       ),
-                      SizedBox(height: 2),
+                      const SizedBox(height: 2),
                       Text(
                         'GitHub Flavored Markdown. Tap for full reference.',
-                        style: TextStyle(color: Colors.white70, fontSize: 13),
+                        style: TextStyle(
+                          color: onSurfaceMuted(context, 0.7),
+                          fontSize: 13,
+                        ),
                       ),
                     ],
                   ),
                 ),
                 Icon(
                   Icons.chevron_right,
-                  color: Colors.white.withValues(alpha: 0.45),
+                  color: onSurfaceMuted(context, 0.45),
                 ),
               ],
             ),
@@ -162,18 +170,24 @@ class SettingsScreen extends ConsumerWidget {
                       packageInfoAsync.when(
                         data: (info) => Text(
                           'Version ${info.version}',
-                          style: const TextStyle(
-                            color: Colors.white70,
+                          style: TextStyle(
+                            color: onSurfaceMuted(context, 0.7),
                             fontSize: 13,
                           ),
                         ),
-                        loading: () => const Text(
+                        loading: () => Text(
                           'Loading…',
-                          style: TextStyle(color: Colors.white54, fontSize: 13),
+                          style: TextStyle(
+                            color: onSurfaceMuted(context, 0.54),
+                            fontSize: 13,
+                          ),
                         ),
-                        error: (_, __) => const Text(
+                        error: (_, __) => Text(
                           'Version unavailable',
-                          style: TextStyle(color: Colors.white54, fontSize: 13),
+                          style: TextStyle(
+                            color: onSurfaceMuted(context, 0.54),
+                            fontSize: 13,
+                          ),
                         ),
                       ),
                     ],
@@ -206,7 +220,10 @@ class _AccountCard extends ConsumerWidget {
         ),
         error: (e, _) => Text(
           'Auth error: $e',
-          style: const TextStyle(color: Colors.white70, fontSize: 13),
+          style: TextStyle(
+            color: onSurfaceMuted(context, 0.7),
+            fontSize: 13,
+          ),
         ),
         data: (user) => user != null
             ? _SignedInView(user: user)
@@ -245,8 +262,8 @@ class _SignedInView extends ConsumerWidget {
               const SizedBox(height: 2),
               Text(
                 user.email,
-                style: const TextStyle(
-                  color: Colors.white70,
+                style: TextStyle(
+                  color: onSurfaceMuted(context, 0.7),
                   fontSize: 12.5,
                 ),
                 overflow: TextOverflow.ellipsis,
@@ -279,19 +296,21 @@ class _SignedOutView extends ConsumerWidget {
           children: [
             Icon(Icons.cloud_off_outlined, color: accent),
             const SizedBox(width: 14),
-            const Expanded(
+            Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
+                  const Text(
                     'Local only',
                     style: TextStyle(fontWeight: FontWeight.w600),
                   ),
-                  SizedBox(height: 2),
+                  const SizedBox(height: 2),
                   Text(
                     'Sign in with Google to enable Drive sync.',
-                    style:
-                        TextStyle(color: Colors.white70, fontSize: 12.5),
+                    style: TextStyle(
+                      color: onSurfaceMuted(context, 0.7),
+                      fontSize: 12.5,
+                    ),
                   ),
                 ],
               ),
@@ -304,7 +323,7 @@ class _SignedOutView extends ConsumerWidget {
           child: FilledButton.icon(
             style: FilledButton.styleFrom(
               backgroundColor: accent.withValues(alpha: 0.9),
-              foregroundColor: Colors.black,
+              foregroundColor: Theme.of(context).colorScheme.onSecondary,
             ),
             onPressed: () async {
               try {
@@ -355,8 +374,8 @@ class _SyncCard extends ConsumerWidget {
                     const SizedBox(height: 2),
                     Text(
                       _statusLine(status, signedIn),
-                      style: const TextStyle(
-                        color: Colors.white70,
+                      style: TextStyle(
+                        color: onSurfaceMuted(context, 0.7),
                         fontSize: 12.5,
                       ),
                     ),
@@ -371,7 +390,7 @@ class _SyncCard extends ConsumerWidget {
             child: FilledButton.icon(
               style: FilledButton.styleFrom(
                 backgroundColor: accent.withValues(alpha: 0.9),
-                foregroundColor: Colors.black,
+                foregroundColor: Theme.of(context).colorScheme.onSecondary,
               ),
               onPressed: (!signedIn || busy)
                   ? null
@@ -392,12 +411,12 @@ class _SyncCard extends ConsumerWidget {
                       }
                     },
               icon: busy
-                  ? const SizedBox(
+                  ? SizedBox(
                       width: 16,
                       height: 16,
                       child: CircularProgressIndicator(
                         strokeWidth: 2,
-                        color: Colors.black,
+                        color: Theme.of(context).colorScheme.onSecondary,
                       ),
                     )
                   : const Icon(Icons.sync),
@@ -494,14 +513,19 @@ class _DriveUsageCardState extends ConsumerState<_DriveUsageCard> {
                 ),
                 const SizedBox(height: 2),
                 usageAsync.when(
-                  loading: () => const Text(
+                  loading: () => Text(
                     'Fetching…',
-                    style: TextStyle(color: Colors.white70, fontSize: 12.5),
+                    style: TextStyle(
+                      color: onSurfaceMuted(context, 0.7),
+                      fontSize: 12.5,
+                    ),
                   ),
                   error: (e, _) => Text(
                     'Unavailable: $e',
-                    style: const TextStyle(
-                        color: Colors.white54, fontSize: 12.5),
+                    style: TextStyle(
+                      color: onSurfaceMuted(context, 0.54),
+                      fontSize: 12.5,
+                    ),
                   ),
                   data: (u) {
                     final archivedPart =
@@ -514,8 +538,10 @@ class _DriveUsageCardState extends ConsumerState<_DriveUsageCard> {
                           '${_fmtBytes(u.bytes)} · '
                           '$active note${active == 1 ? '' : 's'}'
                           '$archivedPart',
-                          style: const TextStyle(
-                              color: Colors.white70, fontSize: 12.5),
+                          style: TextStyle(
+                            color: onSurfaceMuted(context, 0.7),
+                            fontSize: 12.5,
+                          ),
                         ),
                         if (mismatch > 0) ...[
                           const SizedBox(height: 6),
@@ -638,18 +664,21 @@ class _ScanDriveCardState extends ConsumerState<_ScanDriveCard> {
         children: [
           Icon(Icons.cleaning_services_outlined, color: accent),
           const SizedBox(width: 14),
-          const Expanded(
+          Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
+                const Text(
                   'Scan Drive',
                   style: TextStyle(fontWeight: FontWeight.w600),
                 ),
-                SizedBox(height: 2),
+                const SizedBox(height: 2),
                 Text(
                   'Compare local notes with Drive; clean up orphans.',
-                  style: TextStyle(color: Colors.white70, fontSize: 12.5),
+                  style: TextStyle(
+                    color: onSurfaceMuted(context, 0.7),
+                    fontSize: 12.5,
+                  ),
                 ),
               ],
             ),
@@ -662,7 +691,7 @@ class _ScanDriveCardState extends ConsumerState<_ScanDriveCard> {
             )
           else
             Icon(Icons.chevron_right,
-                color: Colors.white.withValues(alpha: 0.45)),
+                color: onSurfaceMuted(context, 0.45)),
         ],
       ),
     );
@@ -722,11 +751,12 @@ class _OrphanReportDialogState extends ConsumerState<_OrphanReportDialog> {
           if (orphansShort.isNotEmpty) ...[
             const SizedBox(height: 4),
             Text(orphansShort,
-                style: const TextStyle(fontSize: 11, color: Colors.white60)),
+                style: TextStyle(
+                    fontSize: 11, color: onSurfaceMuted(context, 0.6))),
             if (r.orphans.length > 3)
               Text('…and ${r.orphans.length - 3} more',
-                  style:
-                      const TextStyle(fontSize: 11, color: Colors.white60)),
+                  style: TextStyle(
+                      fontSize: 11, color: onSurfaceMuted(context, 0.6))),
           ],
           const SizedBox(height: 10),
           Text(
@@ -738,11 +768,12 @@ class _OrphanReportDialogState extends ConsumerState<_OrphanReportDialog> {
           if (missingShort.isNotEmpty) ...[
             const SizedBox(height: 4),
             Text(missingShort,
-                style: const TextStyle(fontSize: 11, color: Colors.white60)),
+                style: TextStyle(
+                    fontSize: 11, color: onSurfaceMuted(context, 0.6))),
             if (r.localOnly.length > 3)
               Text('…and ${r.localOnly.length - 3} more',
-                  style:
-                      const TextStyle(fontSize: 11, color: Colors.white60)),
+                  style: TextStyle(
+                      fontSize: 11, color: onSurfaceMuted(context, 0.6))),
           ],
         ],
       ),
@@ -853,8 +884,8 @@ class _ExportBackupCardState extends ConsumerState<_ExportBackupCard> {
                 const SizedBox(height: 2),
                 Text(
                   '$active active · $archived archived · JSON file',
-                  style: const TextStyle(
-                    color: Colors.white70,
+                  style: TextStyle(
+                    color: onSurfaceMuted(context, 0.7),
                     fontSize: 12.5,
                   ),
                 ),
@@ -864,19 +895,78 @@ class _ExportBackupCardState extends ConsumerState<_ExportBackupCard> {
           FilledButton(
             style: FilledButton.styleFrom(
               backgroundColor: accent.withValues(alpha: 0.9),
-              foregroundColor: Colors.black,
+              foregroundColor: Theme.of(context).colorScheme.onSecondary,
             ),
             onPressed: _busy ? null : _export,
             child: _busy
-                ? const SizedBox(
+                ? SizedBox(
                     width: 14,
                     height: 14,
                     child: CircularProgressIndicator(
                       strokeWidth: 2,
-                      color: Colors.black,
+                      color: Theme.of(context).colorScheme.onSecondary,
                     ),
                   )
                 : const Text('Export'),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ThemeModeCard extends ConsumerWidget {
+  const _ThemeModeCard();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final mode = ref.watch(themeModeProvider);
+    return GlassCard(
+      padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Light / Dark',
+            style: TextStyle(fontWeight: FontWeight.w600, fontSize: 15),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            switch (mode) {
+              ThemeMode.system => 'Follows your system setting',
+              ThemeMode.light => 'Always light',
+              ThemeMode.dark => 'Always dark',
+            },
+            style: TextStyle(
+              color: onSurfaceMuted(context, 0.6),
+              fontSize: 12.5,
+            ),
+          ),
+          const SizedBox(height: 14),
+          SizedBox(
+            width: double.infinity,
+            child: SegmentedButton<ThemeMode>(
+              segments: const [
+                ButtonSegment(
+                  value: ThemeMode.system,
+                  icon: Icon(Icons.brightness_auto),
+                  label: Text('System'),
+                ),
+                ButtonSegment(
+                  value: ThemeMode.light,
+                  icon: Icon(Icons.light_mode_outlined),
+                  label: Text('Light'),
+                ),
+                ButtonSegment(
+                  value: ThemeMode.dark,
+                  icon: Icon(Icons.dark_mode_outlined),
+                  label: Text('Dark'),
+                ),
+              ],
+              selected: {mode},
+              onSelectionChanged: (s) =>
+                  ref.read(themeModeProvider.notifier).set(s.first),
+            ),
           ),
         ],
       ),
@@ -895,7 +985,7 @@ class _SectionLabel extends StatelessWidget {
       child: Text(
         text.toUpperCase(),
         style: TextStyle(
-          color: Colors.white.withValues(alpha: 0.5),
+          color: onSurfaceMuted(context, 0.5),
           fontSize: 11,
           fontWeight: FontWeight.w700,
           letterSpacing: 2,
@@ -988,7 +1078,7 @@ class _PaletteSwatch extends StatelessWidget {
             colors.label.split(' · ').first,
             textAlign: TextAlign.center,
             style: TextStyle(
-              color: Colors.white.withValues(alpha: selected ? 0.95 : 0.65),
+              color: onSurfaceMuted(context, selected ? 0.95 : 0.65),
               fontSize: 11,
               fontWeight: selected ? FontWeight.w600 : FontWeight.w500,
             ),

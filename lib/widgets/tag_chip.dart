@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../theme/surface_colors.dart';
 
 class TagChip extends StatelessWidget {
   const TagChip({
@@ -21,13 +22,13 @@ class TagChip extends StatelessWidget {
     final scheme = Theme.of(context).colorScheme;
     final bg = selected
         ? scheme.secondary.withValues(alpha: 0.22)
-        : Colors.white.withValues(alpha: 0.07);
+        : surfaceTint(context, 0.07);
     final borderColor = selected
         ? scheme.secondary.withValues(alpha: 0.55)
-        : Colors.white.withValues(alpha: 0.12);
+        : onSurfaceMuted(context, 0.12);
     final textColor = selected
         ? scheme.secondary
-        : Colors.white.withValues(alpha: 0.85);
+        : onSurfaceMuted(context, 0.85);
 
     final content = Padding(
       padding: EdgeInsets.symmetric(

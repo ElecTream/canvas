@@ -1,5 +1,6 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import '../theme/surface_colors.dart';
 
 class GlassFab extends StatelessWidget {
   const GlassFab({
@@ -16,6 +17,7 @@ class GlassFab extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final teal = Theme.of(context).colorScheme.secondary;
+    final onTeal = Theme.of(context).colorScheme.onSecondary;
 
     return RepaintBoundary(
       child: ClipOval(
@@ -35,7 +37,7 @@ class GlassFab extends StatelessWidget {
                 ],
               ),
               border: Border.all(
-                color: Colors.white.withValues(alpha: 0.25),
+                color: surfaceTint(context, 0.25),
                 width: 1,
               ),
               boxShadow: [
@@ -54,7 +56,7 @@ class GlassFab extends StatelessWidget {
                 onTap: onPressed,
                 child: Tooltip(
                   message: tooltip ?? '',
-                  child: Icon(icon, color: Colors.white, size: 28),
+                  child: Icon(icon, color: onTeal, size: 28),
                 ),
               ),
             ),

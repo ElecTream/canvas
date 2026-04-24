@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers/palette_provider.dart';
 import '../theme/palettes.dart';
+import '../theme/surface_colors.dart';
 
 class GlassCard extends ConsumerWidget {
   const GlassCard({
@@ -35,18 +36,21 @@ class GlassCard extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final radius = BorderRadius.circular(borderRadius);
     final palette = paletteColorsOf(ref.watch(paletteProvider));
-    final avg = (palette.blob1.computeLuminance() +
-            palette.blob2.computeLuminance() +
-            palette.blob3.computeLuminance()) /
+    final brightness = Theme.of(context).brightness;
+    final blobs = palette.blobsFor(brightness);
+    final avg = (blobs[0].computeLuminance() +
+            blobs[1].computeLuminance() +
+            blobs[2].computeLuminance()) /
         3;
     final t = avg.clamp(0.0, 1.0);
     final minA = readable ? 0.40 : 0.10;
     final maxA = readable ? 0.65 : 0.26;
     final alpha = minA + (maxA - minA) * t;
-    // Readable cards (the editor) tint dark so white body text stays crisp
-    // against the palette blobs; non-readable cards keep the bright frosted
-    // look they had before.
-    final base = readable ? Colors.black : Colors.white;
+    // Readable cards darken/lighten to keep body text crisp against blobs;
+    // non-readable cards keep the frosted look.
+    final base = readable
+        ? readableBase(context)
+        : (brightness == Brightness.dark ? Colors.white : Colors.black);
     final fill = tint ?? base.withValues(alpha: alpha);
 
     Widget inner = AnimatedContainer(
@@ -56,7 +60,7 @@ class GlassCard extends ConsumerWidget {
         color: fill,
         borderRadius: radius,
         border: Border.all(
-          color: Colors.white.withValues(alpha: borderAlpha),
+          color: surfaceTint(context, borderAlpha),
           width: 0.8,
         ),
       ),
@@ -66,8 +70,8 @@ class GlassCard extends ConsumerWidget {
           onTap: onTap,
           onLongPress: onLongPress,
           borderRadius: radius,
-          splashColor: Colors.white.withValues(alpha: 0.04),
-          highlightColor: Colors.white.withValues(alpha: 0.02),
+          splashColor: surfaceTint(context, 0.04),
+          highlightColor: surfaceTint(context, 0.02),
           child: Padding(
             padding: padding ?? EdgeInsets.zero,
             child: child,

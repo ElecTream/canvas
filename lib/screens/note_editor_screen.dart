@@ -11,6 +11,8 @@ import 'package:uuid/uuid.dart';
 import '../models/note.dart';
 import '../providers/image_provider.dart';
 import '../providers/notes_provider.dart';
+import '../theme/markdown_configs.dart';
+import '../theme/surface_colors.dart';
 import '../utils/app_snackbar.dart';
 import '../widgets/attachment_strip.dart';
 import '../widgets/block_editor.dart';
@@ -428,7 +430,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
                           ),
                           const SizedBox(height: 8),
                           Divider(
-                            color: Colors.white.withValues(alpha: 0.08),
+                            color: onSurfaceMuted(context, 0.08),
                             height: 1,
                           ),
                           const SizedBox(height: 8),
@@ -470,8 +472,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
                                     children: [
                                       const SizedBox(height: 8),
                                       Divider(
-                                        color: Colors.white
-                                            .withValues(alpha: 0.08),
+                                        color: onSurfaceMuted(context, 0.08),
                                         height: 1,
                                       ),
                                       AttachmentStrip(
@@ -519,56 +520,7 @@ class _PreviewBody extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final imageService = ref.watch(imageServiceProvider);
-    final body = Colors.white.withValues(alpha: 0.88);
-    final config = MarkdownConfig.darkConfig.copy(
-      configs: [
-        PConfig(textStyle: TextStyle(fontSize: 15, height: 1.55, color: body)),
-        H1Config(
-          style: TextStyle(
-              fontSize: 22,
-              fontWeight: FontWeight.w700,
-              color: Colors.white,
-              height: 1.3),
-        ),
-        H2Config(
-          style: TextStyle(
-              fontSize: 19,
-              fontWeight: FontWeight.w700,
-              color: Colors.white,
-              height: 1.3),
-        ),
-        H3Config(
-          style: TextStyle(
-              fontSize: 17,
-              fontWeight: FontWeight.w600,
-              color: Colors.white,
-              height: 1.3),
-        ),
-        LinkConfig(
-            style: TextStyle(
-                color: accent,
-                decoration: TextDecoration.underline,
-                fontSize: 15)),
-        CodeConfig(
-          style: TextStyle(
-            backgroundColor: Colors.white.withValues(alpha: 0.08),
-            color: accent,
-            fontFamily: 'monospace',
-            fontSize: 14,
-          ),
-        ),
-        PreConfig.darkConfig.copy(
-          textStyle: TextStyle(
-              color: body, fontSize: 13, fontFamily: 'monospace', height: 1.4),
-          decoration: BoxDecoration(
-            color: Colors.black.withValues(alpha: 0.28),
-            borderRadius: BorderRadius.circular(8),
-          ),
-          padding: const EdgeInsets.all(10),
-        ),
-        BlockquoteConfig(sideColor: accent, textColor: body),
-      ],
-    );
+    final config = editorMarkdownConfig(context, accent);
 
     final children = <Widget>[];
     int textIndex = 0;
@@ -637,7 +589,7 @@ class _PreviewBody extends ConsumerWidget {
           padding: const EdgeInsets.all(24),
           child: Text(
             'Nothing to preview',
-            style: TextStyle(color: Colors.white.withValues(alpha: 0.4)),
+            style: TextStyle(color: onSurfaceMuted(context, 0.4)),
           ),
         ),
       );
