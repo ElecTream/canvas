@@ -126,7 +126,10 @@ class _AddButton extends StatelessWidget {
           decoration: BoxDecoration(
             color: surfaceTint(context, 0.04),
             border: Border.all(
-              color: onSurfaceMuted(context, 0.15),
+              color: Theme.of(context)
+                  .colorScheme
+                  .secondary
+                  .withValues(alpha: 0.25),
               width: 0.8,
               style: BorderStyle.solid,
             ),

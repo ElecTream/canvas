@@ -17,7 +17,6 @@ class GlassCard extends ConsumerWidget {
     this.borderRadius = 16,
     this.blur = 18,
     this.tint,
-    this.borderAlpha = 0.10,
     this.readable = false,
   });
 
@@ -30,7 +29,6 @@ class GlassCard extends ConsumerWidget {
   // lists don't pay the N-card blur cost that the perf pass stripped out.
   final double blur;
   final Color? tint;
-  final double borderAlpha;
   final bool readable;
 
   @override
@@ -38,6 +36,7 @@ class GlassCard extends ConsumerWidget {
     final radius = BorderRadius.circular(borderRadius);
     final palette = paletteColorsOf(ref.watch(paletteProvider));
     final contrast = ref.watch(contrastProvider).scale;
+    final accent = Theme.of(context).colorScheme.secondary;
     final brightness = Theme.of(context).brightness;
     final isDark = brightness == Brightness.dark;
     final blobs = palette.blobsFor(brightness);
@@ -57,10 +56,11 @@ class GlassCard extends ConsumerWidget {
         base = Colors.black;
         alpha = (0.40 + 0.25 * t) * contrast;
       } else {
-        // Slight gray darken — text (onSurface) still reads crisp, card
-        // remains distinct from scaffold without going jet black.
-        base = Colors.black;
-        alpha = (0.05 + 0.06 * t) * contrast;
+        // White card so black text reads even when a dark image is sitting
+        // behind the editor. Floor at 0.6 so Soft contrast still masks
+        // the blobs and any inline imagery.
+        base = Colors.white;
+        alpha = ((0.78 + 0.12 * t) * contrast).clamp(0.6, 1.0);
       }
     } else {
       if (isDark) {
@@ -82,7 +82,9 @@ class GlassCard extends ConsumerWidget {
         color: fill,
         borderRadius: radius,
         border: Border.all(
-          color: surfaceTint(context, borderAlpha * contrast),
+          color: accent.withValues(
+            alpha: (0.25 * contrast).clamp(0.0, 1.0),
+          ),
           width: 0.8,
         ),
       ),

@@ -25,7 +25,7 @@ class TagChip extends StatelessWidget {
         : surfaceTint(context, 0.07);
     final borderColor = selected
         ? scheme.secondary.withValues(alpha: 0.55)
-        : onSurfaceMuted(context, 0.12);
+        : scheme.secondary.withValues(alpha: 0.25);
     final textColor = selected
         ? scheme.secondary
         : onSurfaceMuted(context, 0.85);

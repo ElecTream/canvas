@@ -366,7 +366,7 @@ class _AddButton extends StatelessWidget {
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(10),
             border: Border.all(
-              color: surfaceTint(context, 0.18),
+              color: teal.withValues(alpha: 0.25),
               width: 1,
             ),
             color: surfaceTint(context, 0.05),

@@ -2,6 +2,8 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import '../theme/surface_colors.dart';
 
+const double _kAccentBorderAlpha = 0.25;
+
 class GlassAppBar extends StatelessWidget implements PreferredSizeWidget {
   const GlassAppBar({
     super.key,
@@ -25,6 +27,7 @@ class GlassAppBar extends StatelessWidget implements PreferredSizeWidget {
 
   @override
   Widget build(BuildContext context) {
+    final accent = Theme.of(context).colorScheme.secondary;
     return ClipRect(
       child: BackdropFilter(
         filter: ImageFilter.blur(sigmaX: 24, sigmaY: 24),
@@ -33,8 +36,8 @@ class GlassAppBar extends StatelessWidget implements PreferredSizeWidget {
             color: surfaceTint(context, 0.04),
             border: Border(
               bottom: BorderSide(
-                color: surfaceTint(context, 0.08),
-                width: 0.5,
+                color: accent.withValues(alpha: _kAccentBorderAlpha),
+                width: 0.6,
               ),
             ),
           ),
