@@ -1,7 +1,7 @@
 name: canvas
 description: A simple, polished notes app.
 publish_to: 'none'
-version: 0.9.4
+version: 0.9.5
 environment:
   sdk: '>=3.5.0 <4.0.0'
 
@@ -84,6 +84,7 @@ flutter:
   uses-material-design: true
   assets:
     - assets/
+
 
 
 
