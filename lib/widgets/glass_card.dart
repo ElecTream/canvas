@@ -2,7 +2,6 @@ import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../providers/contrast_provider.dart';
 import '../providers/palette_provider.dart';
 import '../theme/palettes.dart';
 import '../theme/surface_colors.dart';
@@ -35,10 +34,12 @@ class GlassCard extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final radius = BorderRadius.circular(borderRadius);
     final palette = paletteColorsOf(ref.watch(paletteProvider));
-    final contrast = ref.watch(contrastProvider).scale;
     final accent = Theme.of(context).colorScheme.secondary;
     final brightness = Theme.of(context).brightness;
     final isDark = brightness == Brightness.dark;
+    // Dark = soft frost (gentle, palette shows through). Light = bold panels
+    // (so black text reads over inline dark images / blob bleed).
+    final contrast = isDark ? 0.7 : 1.5;
     final blobs = palette.blobsFor(brightness);
     final avg = (blobs[0].computeLuminance() +
             blobs[1].computeLuminance() +
