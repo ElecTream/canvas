@@ -499,18 +499,31 @@ class BlockEditorState extends ConsumerState<BlockEditor> {
         i = j;
       } else {
         children.add(
-          TextField(
+          LayoutBuilder(
             key: ValueKey('txt-${e.id}'),
-            controller: e.controller,
-            focusNode: e.focus,
-            decoration: InputDecoration.collapsed(
-              hintText: i == 0 ? 'Start writing…' : '',
+            builder: (ctx, constraints) => Align(
+              alignment: Alignment.topLeft,
+              child: ConstrainedBox(
+                constraints: BoxConstraints(
+                  minWidth: 48,
+                  maxWidth: constraints.maxWidth,
+                ),
+                child: IntrinsicWidth(
+                  child: TextField(
+                    controller: e.controller,
+                    focusNode: e.focus,
+                    decoration: InputDecoration.collapsed(
+                      hintText: i == 0 ? 'Start writing…' : '',
+                    ),
+                    style: const TextStyle(fontSize: 16, height: 1.55),
+                    maxLines: null,
+                    minLines: 1,
+                    textAlignVertical: TextAlignVertical.top,
+                    keyboardType: TextInputType.multiline,
+                  ),
+                ),
+              ),
             ),
-            style: const TextStyle(fontSize: 16, height: 1.55),
-            maxLines: null,
-            minLines: 1,
-            textAlignVertical: TextAlignVertical.top,
-            keyboardType: TextInputType.multiline,
           ),
         );
         i++;
