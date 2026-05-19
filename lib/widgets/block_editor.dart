@@ -106,16 +106,20 @@ class BlockEditorState extends ConsumerState<BlockEditor> {
   }
 
   // Android's word/line-selection often extends to include the trailing `\n`
-  // (and Flutter then paints that selection rect out to the line's right
-  // edge — i.e. the field's width). Strip the trailing newline so the rect
-  // is tight to the actual glyphs.
+  // and any trailing whitespace (and Flutter then paints that selection rect
+  // across the whitespace). Strip both so the rect is tight to actual glyphs.
   void _trimTrailingNewlineSelection(TextEditingController c) {
     final sel = c.selection;
     if (!sel.isValid || sel.isCollapsed) return;
     final text = c.text;
     int end = sel.end;
-    while (end > sel.start && end > 0 && text[end - 1] == '\n') {
-      end--;
+    while (end > sel.start && end > 0) {
+      final ch = text[end - 1];
+      if (ch == '\n' || ch == ' ' || ch == '\t') {
+        end--;
+      } else {
+        break;
+      }
     }
     if (end == sel.end) return;
     final newSel = sel.baseOffset <= sel.extentOffset
