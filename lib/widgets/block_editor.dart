@@ -98,10 +98,36 @@ class BlockEditorState extends ConsumerState<BlockEditor> {
     final focus = FocusNode();
     final entry = _Entry.text(id: id, controller: controller, focus: focus);
     controller.addListener(_notifyChanged);
+    controller.addListener(() => _trimTrailingNewlineSelection(controller));
     focus.addListener(() {
       if (focus.hasFocus) _activeText = entry;
     });
     return entry;
+  }
+
+  // Android's word/line-selection often extends to include the trailing `\n`
+  // (and Flutter then paints that selection rect out to the line's right
+  // edge — i.e. the field's width). Strip the trailing newline so the rect
+  // is tight to the actual glyphs.
+  void _trimTrailingNewlineSelection(TextEditingController c) {
+    final sel = c.selection;
+    if (!sel.isValid || sel.isCollapsed) return;
+    final text = c.text;
+    int end = sel.end;
+    while (end > sel.start && end > 0 && text[end - 1] == '\n') {
+      end--;
+    }
+    if (end == sel.end) return;
+    final newSel = sel.baseOffset <= sel.extentOffset
+        ? TextSelection(baseOffset: sel.baseOffset, extentOffset: end)
+        : TextSelection(baseOffset: end, extentOffset: sel.extentOffset);
+    // Defer so we don't re-enter the listener mid-update.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      if (c.selection.start == sel.start && c.selection.end == sel.end) {
+        c.selection = newSel;
+      }
+    });
   }
 
   void _notifyChanged() {
@@ -499,31 +525,18 @@ class BlockEditorState extends ConsumerState<BlockEditor> {
         i = j;
       } else {
         children.add(
-          LayoutBuilder(
+          TextField(
             key: ValueKey('txt-${e.id}'),
-            builder: (ctx, constraints) => Align(
-              alignment: Alignment.topLeft,
-              child: ConstrainedBox(
-                constraints: BoxConstraints(
-                  minWidth: 48,
-                  maxWidth: constraints.maxWidth,
-                ),
-                child: IntrinsicWidth(
-                  child: TextField(
-                    controller: e.controller,
-                    focusNode: e.focus,
-                    decoration: InputDecoration.collapsed(
-                      hintText: i == 0 ? 'Start writing…' : '',
-                    ),
-                    style: const TextStyle(fontSize: 16, height: 1.55),
-                    maxLines: null,
-                    minLines: 1,
-                    textAlignVertical: TextAlignVertical.top,
-                    keyboardType: TextInputType.multiline,
-                  ),
-                ),
-              ),
+            controller: e.controller,
+            focusNode: e.focus,
+            decoration: InputDecoration.collapsed(
+              hintText: i == 0 ? 'Start writing…' : '',
             ),
+            style: const TextStyle(fontSize: 16, height: 1.55),
+            maxLines: null,
+            minLines: 1,
+            textAlignVertical: TextAlignVertical.top,
+            keyboardType: TextInputType.multiline,
           ),
         );
         i++;
