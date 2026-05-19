@@ -13,7 +13,15 @@
       "Bash(flutter test *)",
       "PowerShell(.\\\\build.ps1 2>&1 | Select-Object -Last 5)",
       "Bash(pwsh -File ./build.ps1)",
-      "Bash(./build.ps1 *)"
+      "Bash(./build.ps1 *)",
+      "Bash(./gradlew.bat help *)",
+      "Bash(./gradlew.bat :app:assembleDebug)",
+      "Bash(./gradlew.bat :app:assembleDebug :app:testDebugUnitTest)",
+      "Bash(./gradlew.bat :app:testDebugUnitTest)",
+      "Bash(git add *)",
+      "Bash(git -c user.name=\"Leeam Sweeney\" -c user.email=\"electream.13@gmail.com\" commit -m \"Fix build: kotlin DSL, haze API rename, generator peak clip, telephony+keepScreenOn wiring, build.ps1, logo\")",
+      "Bash(git rm *)",
+      "Bash(git -c user.name=\"Leeam Sweeney\" -c user.email=\"electream.13@gmail.com\" commit -m \"Ignore .kotlin build artifact dir\")"
     ]
   }
 }

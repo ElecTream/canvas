@@ -65,6 +65,10 @@ class _MyAppState extends ConsumerState<MyApp> with WidgetsBindingObserver {
         state == AppLifecycleState.inactive ||
         state == AppLifecycleState.hidden) {
       ref.read(debouncedSyncProvider).flush();
+      // Sever any live IME connection so the platform keyboard doesn't
+      // resume against a stale FocusNode (symptom: keyboard refuses to
+      // open and cursor/selection stop responding after returning to app).
+      FocusManager.instance.primaryFocus?.unfocus();
     }
   }
 

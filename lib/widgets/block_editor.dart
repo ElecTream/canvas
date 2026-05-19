@@ -216,6 +216,7 @@ class BlockEditorState extends ConsumerState<BlockEditor> {
     left.controller!.text = combined;
     left.controller!.addListener(_notifyChanged);
 
+    if (identical(_activeText, right)) _activeText = null;
     right.controller!.dispose();
     right.focus!.dispose();
     _entries.removeAt(rightIdx);
@@ -420,7 +421,7 @@ class BlockEditorState extends ConsumerState<BlockEditor> {
     }
 
     if (mounted) FocusScope.of(context).unfocus();
-    Future.microtask(() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       final nearest = _entries.cast<_Entry?>().firstWhere(
             (e) => e != null && !e.isImage,
