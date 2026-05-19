@@ -98,40 +98,10 @@ class BlockEditorState extends ConsumerState<BlockEditor> {
     final focus = FocusNode();
     final entry = _Entry.text(id: id, controller: controller, focus: focus);
     controller.addListener(_notifyChanged);
-    controller.addListener(() => _trimTrailingNewlineSelection(controller));
     focus.addListener(() {
       if (focus.hasFocus) _activeText = entry;
     });
     return entry;
-  }
-
-  // Android's word/line-selection often extends to include the trailing `\n`
-  // and any trailing whitespace (and Flutter then paints that selection rect
-  // across the whitespace). Strip both so the rect is tight to actual glyphs.
-  void _trimTrailingNewlineSelection(TextEditingController c) {
-    final sel = c.selection;
-    if (!sel.isValid || sel.isCollapsed) return;
-    final text = c.text;
-    int end = sel.end;
-    while (end > sel.start && end > 0) {
-      final ch = text[end - 1];
-      if (ch == '\n' || ch == ' ' || ch == '\t') {
-        end--;
-      } else {
-        break;
-      }
-    }
-    if (end == sel.end) return;
-    final newSel = sel.baseOffset <= sel.extentOffset
-        ? TextSelection(baseOffset: sel.baseOffset, extentOffset: end)
-        : TextSelection(baseOffset: end, extentOffset: sel.extentOffset);
-    // Defer so we don't re-enter the listener mid-update.
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted) return;
-      if (c.selection.start == sel.start && c.selection.end == sel.end) {
-        c.selection = newSel;
-      }
-    });
   }
 
   void _notifyChanged() {
