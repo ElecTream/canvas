@@ -22,6 +22,7 @@ import '../utils/app_snackbar.dart';
 import '../widgets/glass_app_bar.dart';
 import '../widgets/glass_card.dart';
 import '../widgets/markdown_guide.dart';
+import 'super_editor_spike_screen.dart';
 
 class SettingsScreen extends ConsumerWidget {
   const SettingsScreen({super.key});
@@ -132,6 +133,48 @@ class SettingsScreen extends ConsumerWidget {
                       const SizedBox(height: 2),
                       Text(
                         'GitHub Flavored Markdown. Tap for full reference.',
+                        style: TextStyle(
+                          color: onSurfaceMuted(context, 0.7),
+                          fontSize: 13,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Icon(
+                  Icons.chevron_right,
+                  color: onSurfaceMuted(context, 0.45),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 20),
+          const _SectionLabel('Debug'),
+          GlassCard(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+            onTap: () => Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (_) => const SuperEditorSpikeScreen(),
+              ),
+            ),
+            child: Row(
+              children: [
+                Icon(
+                  Icons.science_outlined,
+                  color: Theme.of(context).colorScheme.secondary,
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'super_editor spike',
+                        style: TextStyle(fontWeight: FontWeight.w600),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        'Throwaway test of super_editor selection / keyboard.',
                         style: TextStyle(
                           color: onSurfaceMuted(context, 0.7),
                           fontSize: 13,
