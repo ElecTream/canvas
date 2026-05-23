@@ -78,8 +78,7 @@ TextEditingValue _insertAtCursor(
 // Empty list marker on Enter → strip the marker line entirely so the cursor
 // lands on a clean blank line at the same indent level. The inserted newline
 // is also dropped because the marker was the only content on that line.
-TextEditingValue _exitList(
-    TextEditingValue value, int lineStart, int cursor) {
+TextEditingValue _exitList(TextEditingValue value, int lineStart, int cursor) {
   final newText =
       value.text.substring(0, lineStart) + value.text.substring(cursor);
   return TextEditingValue(
@@ -91,9 +90,11 @@ TextEditingValue _exitList(
 
 /// TextEditingController that runs [applyEnterHelper] on every assignment.
 class MarkdownInputController extends TextEditingController {
-  MarkdownInputController({super.text});
+  MarkdownInputController({super.text}) {
+    _last = value;
+  }
 
-  TextEditingValue _last = TextEditingValue.empty;
+  late TextEditingValue _last;
 
   @override
   set value(TextEditingValue newValue) {

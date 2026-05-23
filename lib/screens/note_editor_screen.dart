@@ -256,7 +256,8 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
               _isDirty = false;
               Navigator.pop(context);
             },
-            child: const Text('Delete', style: TextStyle(color: Colors.redAccent)),
+            child:
+                const Text('Delete', style: TextStyle(color: Colors.redAccent)),
           ),
         ],
       ),
@@ -398,98 +399,93 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
                 ),
                 child: Hero(
                   tag: _heroTag,
-                  child: GestureDetector(
-                    behavior: HitTestBehavior.deferToChild,
-                    onTap: () =>
-                        _blockEditorKey.currentState?.focusLastTextBlock(),
-                    child: GlassCard(
-                      readable: true,
-                      padding: const EdgeInsets.fromLTRB(18, 16, 18, 12),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          TagChipInput(
-                            tags: _tags,
-                            onChanged: (next) {
-                              setState(() => _tags = next);
-                              _recomputeDirty();
-                            },
+                  child: GlassCard(
+                    readable: true,
+                    padding: const EdgeInsets.fromLTRB(18, 16, 18, 12),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        TagChipInput(
+                          tags: _tags,
+                          onChanged: (next) {
+                            setState(() => _tags = next);
+                            _recomputeDirty();
+                          },
+                        ),
+                        const SizedBox(height: 12),
+                        TextField(
+                          controller: _titleController,
+                          decoration: const InputDecoration.collapsed(
+                              hintText: 'Title'),
+                          style: const TextStyle(
+                            fontSize: 24,
+                            fontWeight: FontWeight.w600,
+                            height: 1.25,
                           ),
-                          const SizedBox(height: 12),
-                          TextField(
-                            controller: _titleController,
-                            decoration: const InputDecoration.collapsed(
-                                hintText: 'Title'),
-                            style: const TextStyle(
-                              fontSize: 24,
-                              fontWeight: FontWeight.w600,
-                              height: 1.25,
-                            ),
-                            maxLines: null,
-                            autofocus: !_isEditing,
+                          maxLines: null,
+                          autofocus: !_isEditing,
+                        ),
+                        const SizedBox(height: 8),
+                        Divider(
+                          color: onSurfaceMuted(context, 0.08),
+                          height: 1,
+                        ),
+                        const SizedBox(height: 8),
+                        Expanded(
+                          child: SingleChildScrollView(
+                            child: _previewMode
+                                ? _PreviewBody(
+                                    blocks: _blocks,
+                                    accent: teal,
+                                    onTextBlockTap: (index, offset) =>
+                                        _enterSourceModeAt(index,
+                                            charOffset: offset),
+                                    onEmptyTap: _enterSourceMode,
+                                    onImageLongPress:
+                                        _enterSourceModeAndShowImageMenu,
+                                  )
+                                : BlockEditor(
+                                    key: _blockEditorKey,
+                                    initialBlocks: _initialBlocks,
+                                    allAttachments: _attachments,
+                                    onChanged: _onBlocksChanged,
+                                    onRemoveImageEverywhere: (name) {
+                                      setState(() {
+                                        _attachments = _attachments
+                                            .where((n) => n != name)
+                                            .toList();
+                                      });
+                                      _recomputeDirty();
+                                    },
+                                  ),
                           ),
-                          const SizedBox(height: 8),
-                          Divider(
-                            color: onSurfaceMuted(context, 0.08),
-                            height: 1,
-                          ),
-                          const SizedBox(height: 8),
-                          Expanded(
-                            child: SingleChildScrollView(
-                              child: _previewMode
-                                  ? _PreviewBody(
-                                      blocks: _blocks,
-                                      accent: teal,
-                                      onTextBlockTap: (index, offset) =>
-                                          _enterSourceModeAt(index,
-                                              charOffset: offset),
-                                      onEmptyTap: _enterSourceMode,
-                                      onImageLongPress:
-                                          _enterSourceModeAndShowImageMenu,
-                                    )
-                                  : BlockEditor(
-                                      key: _blockEditorKey,
-                                      initialBlocks: _initialBlocks,
-                                      allAttachments: _attachments,
-                                      onChanged: _onBlocksChanged,
-                                      onRemoveImageEverywhere: (name) {
-                                        setState(() {
-                                          _attachments = _attachments
-                                              .where((n) => n != name)
-                                              .toList();
-                                        });
+                        ),
+                        AnimatedSize(
+                          duration: const Duration(milliseconds: 200),
+                          curve: Curves.easeOut,
+                          child: _showAttachments
+                              ? Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    const SizedBox(height: 8),
+                                    Divider(
+                                      color: onSurfaceMuted(context, 0.08),
+                                      height: 1,
+                                    ),
+                                    AttachmentStrip(
+                                      names: _attachments,
+                                      onChange: (next) {
+                                        setState(() => _attachments = next);
                                         _recomputeDirty();
                                       },
+                                      onInsertInline: _insertInline,
+                                      onRemoveEverywhere: _removeEverywhere,
                                     ),
-                            ),
-                          ),
-                          AnimatedSize(
-                            duration: const Duration(milliseconds: 200),
-                            curve: Curves.easeOut,
-                            child: _showAttachments
-                                ? Column(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      const SizedBox(height: 8),
-                                      Divider(
-                                        color: onSurfaceMuted(context, 0.08),
-                                        height: 1,
-                                      ),
-                                      AttachmentStrip(
-                                        names: _attachments,
-                                        onChange: (next) {
-                                          setState(() => _attachments = next);
-                                          _recomputeDirty();
-                                        },
-                                        onInsertInline: _insertInline,
-                                        onRemoveEverywhere: _removeEverywhere,
-                                      ),
-                                    ],
-                                  )
-                                : const SizedBox.shrink(),
-                          ),
-                        ],
-                      ),
+                                  ],
+                                )
+                              : const SizedBox.shrink(),
+                        ),
+                      ],
                     ),
                   ),
                 ),
@@ -533,8 +529,8 @@ class _PreviewBody extends ConsumerWidget {
           builder: (ctx, constraints) => GestureDetector(
             behavior: HitTestBehavior.opaque,
             onTapDown: (d) {
-              final offset = _offsetFromTap(
-                  b.text, d.localPosition, constraints.maxWidth);
+              final offset =
+                  _offsetFromTap(b.text, d.localPosition, constraints.maxWidth);
               onTextBlockTap(currentIdx, offset);
             },
             child: Padding(

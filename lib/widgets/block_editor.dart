@@ -346,12 +346,10 @@ class BlockEditorState extends ConsumerState<BlockEditor> {
                 ),
                 if (prevIsImage)
                   ListTile(
-                    leading: Icon(currentNewRow
-                        ? Icons.view_week
-                        : Icons.view_agenda),
-                    title: Text(currentNewRow
-                        ? 'Join row above'
-                        : 'Break to own row'),
+                    leading: Icon(
+                        currentNewRow ? Icons.view_week : Icons.view_agenda),
+                    title: Text(
+                        currentNewRow ? 'Join row above' : 'Break to own row'),
                     onTap: () =>
                         Navigator.pop(ctx, _ImageMenuAction.toggleRowBreak),
                   ),
@@ -444,8 +442,9 @@ class BlockEditorState extends ConsumerState<BlockEditor> {
           orElse: () => null,
         );
     if (target == null) return;
+    final alreadyFocused = target.focus?.hasFocus ?? false;
     target.focus!.requestFocus();
-    if (placeAtEnd) {
+    if (placeAtEnd && !alreadyFocused) {
       final ctrl = target.controller!;
       ctrl.selection = TextSelection.collapsed(offset: ctrl.text.length);
     }
@@ -462,7 +461,8 @@ class BlockEditorState extends ConsumerState<BlockEditor> {
       if (seen == textIndex) {
         e.focus!.requestFocus();
         final ctrl = e.controller!;
-        final offset = (charOffset ?? ctrl.text.length).clamp(0, ctrl.text.length);
+        final offset =
+            (charOffset ?? ctrl.text.length).clamp(0, ctrl.text.length);
         ctrl.selection = TextSelection.collapsed(offset: offset);
         return;
       }
@@ -480,9 +480,8 @@ class BlockEditorState extends ConsumerState<BlockEditor> {
       if (e.isImage) {
         final rowEntries = <MapEntry<int, _Entry>>[MapEntry(i, e)];
         int j = i + 1;
-        while (j < _entries.length &&
-            _entries[j].isImage &&
-            !_entries[j].newRow) {
+        while (
+            j < _entries.length && _entries[j].isImage && !_entries[j].newRow) {
           rowEntries.add(MapEntry(j, _entries[j]));
           j++;
         }
@@ -584,8 +583,8 @@ class _SizePicker extends StatelessWidget {
                 borderRadius: BorderRadius.circular(8),
                 onTap: () => onPick(o),
                 child: Container(
-                  padding: const EdgeInsets.symmetric(
-                      horizontal: 10, vertical: 6),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                   decoration: BoxDecoration(
                     color: selected
                         ? accent.withValues(alpha: 0.22)
@@ -595,9 +594,7 @@ class _SizePicker extends StatelessWidget {
                   child: Text(
                     '${(o * 100).round()}%',
                     style: TextStyle(
-                      color: selected
-                          ? accent
-                          : onSurfaceMuted(context, 0.7),
+                      color: selected ? accent : onSurfaceMuted(context, 0.7),
                       fontWeight: FontWeight.w600,
                       fontSize: 12,
                     ),
@@ -680,8 +677,7 @@ class _ResizableInlineImage extends ConsumerStatefulWidget {
       _ResizableInlineImageState();
 }
 
-class _ResizableInlineImageState
-    extends ConsumerState<_ResizableInlineImage> {
+class _ResizableInlineImageState extends ConsumerState<_ResizableInlineImage> {
   double? _dragStartFraction;
   double? _dragStartX;
 
@@ -748,9 +744,8 @@ class _ResizableInlineImageState
                 if (_dragStartFraction == null || _dragStartX == null) return;
                 if (widget.parentWidth <= 0) return;
                 final delta = d.globalPosition.dx - _dragStartX!;
-                final next =
-                    (_dragStartFraction! + delta / widget.parentWidth)
-                        .clamp(0.2, 1.0);
+                final next = (_dragStartFraction! + delta / widget.parentWidth)
+                    .clamp(0.2, 1.0);
                 widget.onWidthChanged(next);
               },
               onHorizontalDragEnd: (_) {
