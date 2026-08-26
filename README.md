@@ -1,31 +1,37 @@
 # Canvas
 
-Canvas is a lightweight notes app built with Flutter. It syncs notes in real time through Cloud Firestore, uses anonymous Firebase authentication so users can start writing immediately, and runs on Android, iOS, web, and desktop from a single codebase.
+A clean notes app. Local-first on device; Google Sign-In and leftover Firebase still live in the tree.
 
-## Features
+| | |
+| --- | --- |
+| **Brand** | ElecTream |
+| **Listing** | Canvas |
+| **Package** | `com.electream.canvas` |
+| **Version** | 0.9.17 (add `+build` before Play; GitHub release lag is v0.5.1) |
+| **Platforms** | Android + iOS folders; Play is the first ship |
+| **License** | GPL-3.0 |
 
-- Real-time sync across devices via Cloud Firestore
-- Cross-platform: Android, iOS, web, Windows, macOS
-- Dark UI
-- Offline-capable through Firestore's built-in persistence
-- Anonymous authentication so there is no sign-up friction
+## What it does
 
-## Getting Started
+- Notes with a dark UI, markdown, and images (camera / picker / crop)
+- Local storage via Drift/SQLite and the sibling `local_sync` package (`path: ../local_sync` — that package is **not** inside this repo)
+- Google Sign-In is wired; Firebase Auth/Firestore remain as a legacy import path
 
-```
+The old README described anonymous Firestore sync. That is not the current `pubspec.yaml`.
+
+## Run
+
+Needs `../local_sync` checked out next to this repo:
+
+```sh
 flutter pub get
 flutter run
 ```
 
-## Project Structure
+## Docs
 
-| Path | Purpose |
+| File | What it is |
 | --- | --- |
-| `lib/screens` | Top-level UI screens (note list, editor). |
-| `lib/providers` | Riverpod state providers wiring UI to services. |
-| `lib/services` | Firebase/Firestore clients and app-level services. |
-| `lib/models` | Plain data models (e.g. `Note`). |
-
-## License
-
-See [LICENSE](LICENSE).
+| [PRIVACY.md](PRIVACY.md) | Privacy policy (host a public copy for Play) |
+| [STORE.md](STORE.md) | Play listing copy, Data safety, upload checklist |
+| [CHANGELOG.md](CHANGELOG.md) | Version history (stale vs 0.9.17) |
